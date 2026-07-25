@@ -44,7 +44,6 @@
   "providedServices": {
     "diff-view": {
       "versions": {
-        "0.0.1": "provideDiffService",
         "1.0.0": "provideDiffView"
       }
     },

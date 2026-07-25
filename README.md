@@ -49,7 +49,7 @@ atom-text-editor .line.diff-view-line.diff-view-added {
 ## Services
 
 - **diff-view** (`1.0.0`): provided to let other packages programmatically start, control, and inspect diffs — exposes `diffEditors(editor1, editor2, options)`, `getMarkerLayers()`, and `disable()`.
-- **diff-view** (`0.0.1`): provided to scrollbar-marker consumers — exposes `getDiffView()` with the current diff chunks and editors, plus an `onDidUpdate(callback)` subscription.
+- **diff-view** (`1.0.0`): provided to scrollbar-marker consumers — exposes `getDiffView()` with the current diff chunks and editors, plus an `onDidUpdate(callback)` subscription.
 - **split-diff** (`1.0.0`): provided as a compatibility alias of the `diff-view` service for consumers of the original split-diff API.
 
 ## Contributing

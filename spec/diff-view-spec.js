@@ -132,8 +132,8 @@ describe("diff-view", () => {
       expect(providedServices["diff-view"].versions["1.0.0"]).toBe("provideDiffView");
     });
 
-    it("provides the scrollbar-marker data service", async () => {
-      const service = mainModule.provideDiffService();
+    it("provides the scrollbar-marker data surface on the service", async () => {
+      const service = mainModule.provideDiffView();
       expect(service.getDiffView()).toBeNull();
 
       let latest = null;
