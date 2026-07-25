@@ -147,7 +147,9 @@ describe("diff-view", () => {
 
       expect(latest.editor1).toBe(editor1);
       expect(latest.editor2).toBe(editor2);
+      expect(latest.addedColorSide).toBe("left");
       expect(service.getDiffView().chunks.length).toBeGreaterThan(0);
+      expect(service.getDiffView().addedColorSide).toBe("left");
 
       subscription.dispose();
     });
