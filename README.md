@@ -2,23 +2,19 @@
 
 A split pane diff tool. Compare files side-by-side with synchronized scrolling, soft-wrap support, git integration, and context menus.
 
-![view](https://github.com/asiloisad/pulsar-diff-view/blob/master/assets/view.png?raw=true)
-
-Fork of [split-diff](https://github.com/mupchrch/split-diff).
-
 ## Features
 
-- **Soft-wrap support**: Diff works correctly with soft-wrap enabled, including proper line offsets and scroll synchronization.
-- **Buffer-based scroll sync**: Uses buffer line positions for proper alignment across different soft-wrap settings.
-- **Quick toggle buttons**: Footer buttons for soft-wrap toggle and equalizing pane widths.
-- **Context menus**: Right-click on tree-view files or tabs to "Diff with Active File".
-- **Scrollbar markers**: Shows diff markers in the scrollbar, via [scrollmap](https://github.com/asiloisad/pulsar-scrollmap).
-- **Scroll compatibility**: View zone alignment correctly resyncs after soft-wrap recalculation on pane resize, via [scroll-keeper](https://github.com/asiloisad/pulsar-scroll-keeper).
-- **Modern codebase**: Converted to JavaScript with updated dependencies.
+- **Side-by-side diff**: highlights added, removed, and changed lines in two editors.
+- **Word diff**: highlights the changed words within each modified line.
+- **Git integration**: diff the active file against its git HEAD or a previous commit.
+- **Soft-wrap support**: diff works correctly with soft wrap enabled, including proper line offsets and scroll synchronization.
+- **Buffer-based scroll sync**: uses buffer line positions for proper alignment across different soft-wrap settings.
+- **Quick toggle buttons**: footer buttons for soft-wrap toggle and equalizing pane widths.
+- **Context menus**: right-click on tree-view files or tabs to "Diff with Active File".
 
 ## Installation
 
-To install `diff-view` search for [diff-view](https://web.pulsar-edit.dev/packages/diff-view) in the Install pane of the Pulsar settings or run `ppm install diff-view`. Alternatively, you can run `ppm install asiloisad/pulsar-diff-view` to install a package directly from the GitHub repository.
+To install `diff-view` search for _diff-view_ in the Install pane of the Lumine settings or run `lumine --install lumine-code/diff-view`.
 
 ## Commands
 
@@ -40,49 +36,21 @@ Commands available in `atom-workspace`:
 - `diff-view:set-ignore-whitespace`: toggle ignore whitespace,
 - `diff-view:set-auto-diff`: toggle auto diff.
 
-## Provided Service `diff-view`
+## Customization
 
-Allows other packages to programmatically start, control, and inspect diffs.
+The diff highlights can be tweaked from your stylesheet, e.g. in `styles.less`:
 
-In your `package.json`:
-
-```json
-{
-  "consumedServices": {
-    "diff-view": {
-      "versions": {
-        "1.0.0": "consumeDiffView"
-      }
-    }
-  }
+```less
+atom-text-editor .line.diff-view-line.diff-view-added {
+  background-color: color-mix(in srgb, var(--syntax-color-added) 35%, transparent);
 }
 ```
 
-In your main module:
+## Services
 
-```javascript
-module.exports = {
-  consumeDiffView(diffViewService) {
-    // Get marker layers for the current diff
-    diffViewService.getMarkerLayers().then((layers) => {
-      // layers.editor1MarkerLayer, layers.editor2MarkerLayer
-    });
-
-    // Start a diff between two editors
-    diffViewService.diffEditors(editor1, editor2, {
-      ignoreWhitespace: true,
-      autoDiff: false
-    });
-
-    // Disable the current diff
-    diffViewService.disable();
-  }
-}
-```
-
-- `getMarkerLayers()`: returns a `Promise` that resolves to an object containing the marker layers of each editor being diffed.
-- `diffEditors(editor1, editor2, options)`: enables diff-view between the two given editors. `options` overrides any package setting.
-- `disable()`: disables diff-view.
+- **diff-view** (`1.0.0`): provided to let other packages programmatically start, control, and inspect diffs — exposes `diffEditors(editor1, editor2, options)`, `getMarkerLayers()`, and `disable()`.
+- **diff-view** (`0.0.1`): provided to scrollbar-marker consumers — exposes `getDiffView()` with the current diff chunks and editors, plus an `onDidUpdate(callback)` subscription.
+- **split-diff** (`1.0.0`): provided as a compatibility alias of the `diff-view` service for consumers of the original split-diff API.
 
 ## Contributing
 

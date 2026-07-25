@@ -1,6 +1,11 @@
 {
   "name": "diff-view",
+  "author": "lumine-code",
   "description": "A split pane diff tool",
+  "repository": "https://github.com/lumine-code/diff-view",
+  "bugs": {
+    "url": "https://github.com/lumine-code/diff-view/issues"
+  },
   "keywords": [
     "diff",
     "git",
@@ -13,15 +18,28 @@
     "difference",
     "visual"
   ],
+  "version": "1.0.0",
   "license": "MIT",
-  "version": "0.4.7",
-  "repository": "https://github.com/asiloisad/pulsar-diff-view",
   "engines": {
     "atom": ">=1.100.0 <2.0.0"
   },
   "main": "./lib/diff-view",
+  "scripts": {
+    "test": "cd ../lumine && npm run test:only -- ../diff-view/spec",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
   "dependencies": {
-    "diff": "^8.0.0"
+    "diff": "^9.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-n": "^18.2.2",
+    "globals": "^17.7.0",
+    "prettier": "^3.9.6"
   },
   "providedServices": {
     "diff-view": {
@@ -41,87 +59,76 @@
       "title": "Auto Diff",
       "description": "Automatically recalculates the diff when one of the editors changes.",
       "type": "boolean",
-      "default": true,
-      "order": 1
+      "default": true
     },
     "diffWords": {
       "title": "Show Word Diff",
       "description": "Diffs the words between each line when this box is checked.",
       "type": "boolean",
-      "default": true,
-      "order": 2
+      "default": true
     },
     "ignoreWhitespace": {
       "title": "Ignore Whitespace",
       "description": "Will not diff whitespace when this box is checked.",
       "type": "boolean",
-      "default": false,
-      "order": 3
+      "default": false
     },
     "turnOffSoftWrap": {
       "title": "Disable Soft Wrap During Diff",
       "description": "Temporarily disables soft wrap during diff (restores when finished). Soft wrap is now fully supported, but you can enable this for the classic behavior.",
       "type": "boolean",
-      "default": false,
-      "order": 4
+      "default": false
     },
     "muteNotifications": {
       "title": "Mute Notifications",
       "description": "Mutes all warning notifications when this box is checked.",
       "type": "boolean",
-      "default": false,
-      "order": 5
+      "default": false
     },
     "hideDocks": {
       "title": "Hide Docks",
-      "description": "Hides all docks (Tree View, Github, etc) during diff - shows when finished.",
+      "description": "Hides all docks (Tree View, Git, etc) during diff - shows when finished.",
       "type": "boolean",
-      "default": false,
-      "order": 6
+      "default": false
     },
     "scrollSyncType": {
       "title": "Sync Scrolling",
       "description": "Syncs the scrolling of the editors.",
       "type": "string",
-      "default": "Vertical + Horizontal",
       "enum": [
         "Vertical + Horizontal",
         "Vertical",
         "None"
       ],
-      "order": 7
+      "default": "Vertical + Horizontal"
     },
     "addedColorSide": {
       "title": "Added Color Side",
       "description": "The side that the latest version of the file is on. The added color will be applied to this editor and the removed color will be opposite.",
       "type": "string",
-      "default": "left",
       "enum": [
         "left",
         "right"
       ],
-      "order": 8
+      "default": "left"
     },
     "overrideThemeColors": {
       "title": "Override Highlight Colors",
       "description": "Override the line highlight colors (defined by variables in your selected syntax theme) with the colors selected below.",
       "type": "boolean",
-      "default": false,
-      "order": 9
+      "default": false
     },
     "addedColor": {
       "title": "Added Custom Color",
       "description": "The color that will be used for highlighting added lines when **Override Highlight Colors** is checked.",
       "type": "color",
-      "default": "green",
-      "order": 10
+      "default": "green"
     },
     "removedColor": {
       "title": "Removed Custom Color",
       "description": "The color that will be used for highlighting removed lines when **Override Highlight Colors** is checked.",
       "type": "color",
-      "default": "red",
-      "order": 11
+      "default": "red"
     }
   }
 }

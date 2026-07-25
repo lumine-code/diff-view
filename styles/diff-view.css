@@ -1,84 +1,80 @@
-@import "syntax-variables";
-@import "octicon-mixins";
-
 atom-text-editor {
   .gutter .line-number,
   .line {
     &.diff-view-line {
       &.diff-view-added {
-        background-color: fade(@syntax-color-added, 20%);
+        background-color: color-mix(in srgb, var(--syntax-color-added) 20%, transparent);
       }
 
       &.diff-view-removed {
-        background-color: fade(@syntax-color-removed, 20%);
+        background-color: color-mix(in srgb, var(--syntax-color-removed) 20%, transparent);
       }
 
       &.diff-view-selected {
-        background-color: fade(@syntax-color-modified, 20%);
+        background-color: color-mix(in srgb, var(--syntax-color-modified) 20%, transparent);
       }
     }
   }
 
   .diff-view-word-added .region {
-    background-color: fade(@syntax-color-added, 20%);
+    background-color: color-mix(in srgb, var(--syntax-color-added) 20%, transparent);
   }
 
   .diff-view-word-removed .region {
-    background-color: fade(@syntax-color-removed, 20%);
+    background-color: color-mix(in srgb, var(--syntax-color-removed) 20%, transparent);
   }
 
   .diff-view-offset {
-    background-color: fade(@syntax-gutter-background-color-selected, 50%);
+    background-color: color-mix(
+      in srgb,
+      var(--syntax-gutter-background-color-selected) 50%,
+      transparent
+    );
   }
 }
 
-@spinner-duration: 1.2s;
-@spinner-color: mix(
-  hsv(220, 100%, 66%),
-  hsl(220, 100%, 70%),
-  luma(hsl(220, 50%, 50%))
-);
 .diff-view-loading-icon {
+  --spinner-color: var(--text-color-info);
+  --spinner-duration: 1.2s;
   position: relative;
   display: inline-block;
   width: 1em;
   height: 1em;
   vertical-align: middle;
-  background: radial-gradient(@spinner-color 0.1em, transparent 0.11em);
+  background: radial-gradient(var(--spinner-color) 0.1em, transparent 0.11em);
 
   &::before,
   &::after {
     content: "";
     position: absolute;
-    z-index: 10; // prevent sibling elements from getting their own layers
+    z-index: 10; /* prevent sibling elements from getting their own layers */
     top: 0;
     left: 0;
-    border-radius: 1em;
     width: inherit;
     height: inherit;
     border-radius: 1em;
     border: 2px solid;
-    -webkit-animation: spinner-animation @spinner-duration infinite;
-    -webkit-animation-fill-mode: backwards;
+    animation: diff-view-spinner-animation var(--spinner-duration) infinite;
+    animation-fill-mode: backwards;
   }
   &::before {
-    border-color: @spinner-color transparent transparent transparent;
+    border-color: var(--spinner-color) transparent transparent transparent;
   }
   &::after {
-    border-color: transparent lighten(@spinner-color, 15%) transparent
+    border-color: transparent color-mix(in srgb, var(--spinner-color) 85%, white) transparent
       transparent;
-    -webkit-animation-delay: @spinner-duration / 2;
+    animation-delay: calc(var(--spinner-duration) / 2);
   }
 }
 
-@-webkit-keyframes spinner-animation {
+@keyframes diff-view-spinner-animation {
   0% {
     transform: rotateZ(0deg);
-    -webkit-animation-timing-function: cubic-bezier(0, 0, 0.8, 0.2);
+    animation-timing-function: cubic-bezier(0, 0, 0.8, 0.2);
   }
   50% {
     transform: rotateZ(180deg);
-    -webkit-animation-timing-function: cubic-bezier(0.2, 0.8, 1, 1);
+    animation-timing-function: cubic-bezier(0.2, 0.8, 1, 1);
   }
   100% {
     transform: rotateZ(360deg);
@@ -119,39 +115,9 @@ atom-text-editor {
     vertical-align: middle;
   }
 
-  /* button icons */
-  .prev-diff {
-    .octicon(chevron-up);
-  }
-  .next-diff {
-    .octicon(chevron-down);
-  }
-  .copy-to-left {
-    .octicon(clippy);
-  }
-  .copy-to-right {
-    .octicon(clippy);
-    &:before {
-      transform: scaleX(-1);
-    }
-  }
-  .ignore-whitespace {
-    .octicon(eye);
-  }
-  .auto-diff {
-    .octicon(sync);
-  }
-  .soft-wrap {
-    .octicon(unfold);
-  }
-  .equalize-widths {
-    .octicon(mirror);
-  }
-  .center-line {
-    .octicon(horizontal-rule);
-  }
-  .close-diff {
-    .octicon(x);
+  /* mirrored clippy icon points the copy direction */
+  .copy-to-right::before {
+    transform: scaleX(-1);
   }
 
   /* button spacing - consistent for all buttons */
@@ -168,8 +134,8 @@ atom-text-editor {
   .soft-wrap,
   .center-line {
     &.selected {
-      background-color: @button-background-color-selected;
-      color: @text-color-selected;
+      background-color: var(--button-background-color-selected);
+      color: var(--text-color-selected);
     }
   }
 }
@@ -183,12 +149,14 @@ body.diff-view-visible .atom-dock-toggle-button.bottom {
 .diff-view-center-line {
   position: fixed;
   height: 3px;
-  background-color: @syntax-color-modified;
+  background-color: var(--syntax-color-modified);
   opacity: 0.5;
   cursor: ns-resize;
   z-index: 1000;
   pointer-events: all;
-  transition: opacity 0.1s, height 0.1s;
+  transition:
+    opacity 0.1s,
+    height 0.1s;
   &:hover {
     opacity: 0.8;
     height: 5px;
