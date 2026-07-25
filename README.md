@@ -1,6 +1,8 @@
 # diff-view
 
-A split pane diff tool. Compare files side-by-side with synchronized scrolling, soft-wrap support, git integration, and context menus.
+A split pane diff tool.
+
+Compare files side-by-side with synchronized scrolling, soft-wrap support, git integration, and context menus.
 
 ## Features
 
