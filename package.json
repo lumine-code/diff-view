@@ -42,11 +42,6 @@
       "versions": {
         "1.0.0": "provideDiffView"
       }
-    },
-    "split-diff": {
-      "versions": {
-        "1.0.0": "provideDiffView"
-      }
     }
   },
   "configSchema": {

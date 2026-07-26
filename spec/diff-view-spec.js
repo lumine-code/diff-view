@@ -108,7 +108,7 @@ describe("diff-view", () => {
   });
 
   describe("provided services", () => {
-    it("provides the diff-view/split-diff control service", async () => {
+    it("provides the diff-view control service", async () => {
       const service = mainModule.provideDiffView();
       expect(typeof service.getMarkerLayers).toBe("function");
       expect(typeof service.diffEditors).toBe("function");
@@ -126,10 +126,10 @@ describe("diff-view", () => {
       expect(mainModule.isEnabled).toBe(false);
     });
 
-    it("declares the split-diff service as a compatibility alias", () => {
+    it("declares the diff-view service and no split-diff alias", () => {
       const { providedServices } = atom.packages.getActivePackage("diff-view").metadata;
-      expect(providedServices["split-diff"].versions["1.0.0"]).toBe("provideDiffView");
       expect(providedServices["diff-view"].versions["1.0.0"]).toBe("provideDiffView");
+      expect(providedServices["split-diff"]).toBeUndefined();
     });
 
     it("provides the scrollbar-marker data surface on the service", async () => {
