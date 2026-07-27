@@ -21,7 +21,7 @@
   },
   "main": "./lib/diff-view",
   "scripts": {
-    "test": "cd ../lumine && npm run test:only -- ../diff-view/spec",
+    "test": "cd ../../lumine && npm run test:only -- ../pkg_lumine/diff-view/spec",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
