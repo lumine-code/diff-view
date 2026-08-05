@@ -23,6 +23,13 @@
     "{% if keys['diff-view:git-head'] %}You can diff the current file against its last commit with {{ 'diff-view:git-head' | keystroke }}{% else %}You can diff two files side by side, or the current file against its last commit.{% endif %}"
   ],
   "main": "./lib/diff-view",
+  "files": [
+    "docs",
+    "lib",
+    "menus",
+    "spec",
+    "styles"
+  ],
   "scripts": {
     "test": "lumine --test spec",
     "lint": "eslint . --max-warnings 0",
