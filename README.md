@@ -40,9 +40,9 @@ Commands available in `atom-workspace`:
 
 ## Customization
 
-The diff highlights can be tweaked from your stylesheet, e.g. in `styles.less`:
+The diff highlights can be tweaked from your stylesheet, e.g. in `styles.css`:
 
-```less
+```css
 atom-text-editor .line.diff-view-line.diff-view-added {
   background-color: color-mix(in srgb, var(--syntax-color-added) 35%, transparent);
 }
