@@ -1,9 +1,15 @@
 {
   "context-menu": {
-    ".tree-view-root:not(.multi-select) .file.selected": [
+    ".tree-view .full-menu:not(.multi-select) .file.selected": [
+      {
+        "type": "separator"
+      },
       {
         "label": "Diff with Active File",
         "command": "diff-view:enable"
+      },
+      {
+        "type": "separator"
       }
     ]
   },
@@ -14,9 +20,18 @@
         {
           "label": "Diff View",
           "submenu": [
-            { "label": "Toggle", "command": "diff-view:toggle" },
-            { "label": "Diff with Git HEAD", "command": "diff-view:git-head" },
-            { "label": "Diff with Git Commit", "command": "diff-view:git-commit" }
+            {
+              "label": "Toggle",
+              "command": "diff-view:toggle"
+            },
+            {
+              "label": "Diff with Git HEAD",
+              "command": "diff-view:git-head"
+            },
+            {
+              "label": "Diff with Git Commit",
+              "command": "diff-view:git-commit"
+            }
           ]
         }
       ]
