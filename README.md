@@ -20,7 +20,7 @@ To install `diff-view` search for _diff-view_ in the Install pane of the Lumine 
 
 ## Commands
 
-Commands available in `atom-workspace`:
+Commands available in `lumine-workspace`:
 
 - `diff-view:enable`: start a diff between two panes,
 - `diff-view:toggle`: toggle diff on/off,
@@ -43,7 +43,7 @@ Commands available in `atom-workspace`:
 The diff highlights can be tweaked from your stylesheet, e.g. in `styles.css`:
 
 ```css
-atom-text-editor .line.diff-view-line.diff-view-added {
+lumine-text-editor .line.diff-view-line.diff-view-added {
   background-color: color-mix(in srgb, var(--syntax-color-added) 35%, transparent);
 }
 ```

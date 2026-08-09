@@ -1,4 +1,4 @@
-atom-text-editor {
+lumine-text-editor {
   .gutter .line-number,
   .line {
     &.diff-view-line {
@@ -141,7 +141,7 @@ atom-text-editor {
 }
 
 /* Move dock toggle button above diff-view footer */
-body.diff-view-visible .atom-dock-toggle-button.bottom {
+body.diff-view-visible .lumine-dock-toggle-button.bottom {
   transform: translateY(-30px);
 }
 

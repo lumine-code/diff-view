@@ -20,9 +20,9 @@ describe("diff-view", () => {
   let workspaceElement, mainModule;
 
   beforeEach(async () => {
-    workspaceElement = atom.views.getView(atom.workspace);
+    workspaceElement = lumine.views.getView(lumine.workspace);
     jasmine.attachToDOM(workspaceElement);
-    const pkg = await atom.packages.activatePackage("diff-view");
+    const pkg = await lumine.packages.activatePackage("diff-view");
     mainModule = pkg.mainModule;
   });
 
@@ -31,10 +31,10 @@ describe("diff-view", () => {
   });
 
   async function openEditorsSideBySide(text1, text2) {
-    const editor1 = await atom.workspace.open();
+    const editor1 = await lumine.workspace.open();
     editor1.setText(text1);
-    atom.workspace.getActivePane().splitRight();
-    const editor2 = await atom.workspace.open();
+    lumine.workspace.getActivePane().splitRight();
+    const editor2 = await lumine.workspace.open();
     editor2.setText(text2);
     return { editor1, editor2 };
   }
@@ -127,7 +127,7 @@ describe("diff-view", () => {
     });
 
     it("declares the diff-view service and no split-diff alias", () => {
-      const { providedServices } = atom.packages.getActivePackage("diff-view").metadata;
+      const { providedServices } = lumine.packages.getActivePackage("diff-view").metadata;
       expect(providedServices["diff-view"].versions["1.0.0"]).toBe("provideDiffView");
       expect(providedServices["split-diff"]).toBeUndefined();
     });
