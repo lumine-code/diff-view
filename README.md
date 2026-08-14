@@ -16,7 +16,7 @@ Compare files side-by-side with synchronized scrolling, soft-wrap support, git i
 
 ## Installation
 
-To install `diff-view` search for _diff-view_ in the Install pane of the Lumine settings or run `lumine --install lumine-code/diff-view`.
+To install `diff-view` search for it in the Install pane of the Lumine settings, or run the command `lumine --install lumine-code/diff-view`.
 
 ## Commands
 
@@ -50,8 +50,8 @@ lumine-text-editor .line.diff-view-line.diff-view-added {
 
 ## Services
 
-- **[diff-view](docs/diff-view.md)** (`1.0.0`): provided to let other packages programmatically start, control, and inspect diffs — exposes `diffEditors(editor1, editor2, options)`, `getMarkerLayers()`, and `disable()`.
-- **[diff-view](docs/diff-view.md)** (`1.0.0`): provided to scrollbar-marker consumers — exposes `getDiffView()` with the current diff chunks and editors, plus an `onDidUpdate(callback)` subscription.
+- [`diff-view`](docs/diff-view.md): provided to let other packages programmatically start, control, and inspect diffs — exposes `diffEditors(editor1, editor2, options)`, `getMarkerLayers()`, and `disable()`.
+- [`diff-view`](docs/diff-view.md): provided to scrollbar-marker consumers — exposes `getDiffView()` with the current diff chunks and editors, plus an `onDidUpdate(callback)` subscription.
 
 ## Contributing
 
