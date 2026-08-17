@@ -13,6 +13,7 @@ Compare files side-by-side with synchronized scrolling, soft-wrap support, git i
 - **Buffer-based scroll sync**: uses buffer line positions for proper alignment across different soft-wrap settings.
 - **Quick toggle buttons**: footer buttons for soft-wrap toggle and equalizing pane widths.
 - **Context menus**: right-click on tree-view files or tabs to "Diff with Active File".
+- **Scrollbar markers**: shows the diff chunks on the scrollbar and minimap via the marker hub.
 
 ## Installation
 
@@ -52,6 +53,7 @@ lumine-text-editor .line.diff-view-line.diff-view-added {
 
 - [`diff-view`](docs/diff-view.md): provided to let other packages programmatically start, control, and inspect diffs — exposes `diffEditors(editor1, editor2, options)`, `getMarkerLayers()`, and `disable()`.
 - [`diff-view`](docs/diff-view.md): provided to scrollbar-marker consumers — exposes `getDiffView()` with the current diff chunks and editors, plus an `onDidUpdate(callback)` subscription.
+- `marker.layer`: provided to draw the diff chunks on the editor's overview maps (scrollbar, minimap).
 
 ## Contributing
 

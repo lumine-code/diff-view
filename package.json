@@ -52,6 +52,11 @@
       "versions": {
         "1.0.0": "provideDiffView"
       }
+    },
+    "marker.layer": {
+      "versions": {
+        "1.0.0": "provideMarkerLayer"
+      }
     }
   },
   "configSchema": {
@@ -129,6 +134,26 @@
       "description": "The color that will be used for highlighting removed lines when **Override Highlight Colors** is checked.",
       "type": "color",
       "default": "red"
+    },
+    "marker": {
+      "title": "Marker",
+      "description": "Settings of the diff-view layer drawn on the scrollbar and minimap by the marker hub.",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "title": "Enabled",
+          "description": "Show diff chunk markers on the scrollbar and minimap.",
+          "type": "boolean",
+          "default": true
+        },
+        "threshold": {
+          "title": "Threshold",
+          "description": "Hide markers if count exceeds this value. Zero means no limit.",
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        }
+      }
     }
   }
 }
