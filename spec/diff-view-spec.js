@@ -107,6 +107,70 @@ describe("diff-view", () => {
     });
   });
 
+  describe("when an edit outdates the diff", () => {
+    it("does not measure lines the buffer no longer has", async () => {
+      const { editor1, editor2 } = await openEditorsSideBySide(
+        Array.from({ length: 60 }, (_, i) => `line ${i}`).join("\n"),
+        Array.from({ length: 60 }, (_, i) => (i === 30 ? "changed" : `line ${i}`)).join("\n"),
+      );
+
+      mainModule.diffEditors(editor1, editor2, { autoDiff: false, muteNotifications: true });
+      await pollUntil(
+        () => mainModule.diffView != null && mainModule.diffView.getNumDifferences() > 0,
+      );
+
+      // The chunks still describe 60 lines. A resize or a soft-wrap change can
+      // land in this window, and it used to throw out of a timer, which opened
+      // the dev tools with nothing in the console to say why.
+      editor2.setText("one line\n");
+
+      expect(() => mainModule.diffView._syncViewZoneHeights()).not.toThrow();
+    });
+
+    it("leaves the existing view zones alone until the diff catches up", async () => {
+      const { editor1, editor2 } = await openEditorsSideBySide(
+        Array.from({ length: 60 }, (_, i) => `line ${i}`).join("\n"),
+        Array.from({ length: 50 }, (_, i) => `line ${i}`).join("\n"),
+      );
+
+      mainModule.diffEditors(editor1, editor2, { autoDiff: false, muteNotifications: true });
+      await pollUntil(
+        () => mainModule.diffView != null && mainModule.diffView.getNumDifferences() > 0,
+      );
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      const zonesBefore = mainModule.diffView._editorDiffExtender2.getViewZones().length;
+
+      editor2.setText("one line\n");
+      mainModule.diffView._syncViewZoneHeights();
+
+      // Recomputing against stale chunks would place spacers at the wrong rows,
+      // so the current ones stay until the diff already on its way lands.
+      expect(mainModule.diffView._editorDiffExtender2.getViewZones().length).toBe(zonesBefore);
+    });
+  });
+
+  describe("equalize widths", () => {
+    it("sets the flex scale on the panes rather than on their elements", async () => {
+      const { editor1, editor2 } = await openEditorsSideBySide("a\nb\n", "a\nc\n");
+      mainModule.diffEditors(editor1, editor2, { autoDiff: false, muteNotifications: true });
+      await pollUntil(
+        () => mainModule.diffView != null && mainModule.diffView.getNumDifferences() > 0,
+      );
+
+      const pane1 = lumine.workspace.paneForItem(editor1);
+      const pane2 = lumine.workspace.paneForItem(editor2);
+      pane1.setFlexScale(0.4);
+      pane2.setFlexScale(1.6);
+
+      mainModule.equalizeWidths();
+
+      // A style written behind the pane's back holds only until the next thing
+      // that reads the model, and then the panes spring back.
+      expect(pane1.getFlexScale()).toBe(1);
+      expect(pane2.getFlexScale()).toBe(1);
+    });
+  });
+
   describe("custom highlight colors", () => {
     function customStylesheet() {
       const styleElement = document
