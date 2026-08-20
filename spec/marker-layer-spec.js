@@ -139,6 +139,68 @@ describe("diff-view marker layer", () => {
     expect(late.items).toEqual([{ row: 2, end: 3, cls: "removed" }]);
   });
 
+  it("covers every screen row of a chunk whose lines wrap", () => {
+    // Screen rows, not buffer rows: a marker that ended at the first screen row
+    // of the chunk's last line covered a fraction of what the chunk spans.
+    editor1.setText(Array(50).fill("word ".repeat(40)).join("\n"));
+    editor1.setSoftWrapped(true);
+    editor1.displayLayer.reset({ softWrapColumn: 20 });
+
+    service.emitter.emit("did-update-diff", {
+      chunks: [{ oldLineStart: 2, oldLineEnd: 4, newLineStart: 2, newLineEnd: 4 }],
+      editor1,
+      editor2,
+    });
+
+    const [item] = layer1.items;
+    expect(item.row).toBe(editor1.screenRowForBufferRow(2));
+    // The last screen row of buffer line 3 is the row before line 4 starts.
+    expect(item.end).toBe(editor1.screenRowForBufferRow(4) - 1);
+    expect(item.end).toBeGreaterThan(item.row + 1);
+  });
+
+  it("marks the last chunk of the file without running past the end", () => {
+    const lastRow = editor1.getLastBufferRow();
+    service.emitter.emit("did-update-diff", {
+      chunks: [
+        {
+          oldLineStart: lastRow,
+          oldLineEnd: lastRow + 1,
+          newLineStart: lastRow,
+          newLineEnd: lastRow + 1,
+        },
+      ],
+      editor1,
+      editor2,
+    });
+
+    expect(layer1.items).toEqual([
+      {
+        row: editor1.screenRowForBufferRow(lastRow),
+        end: editor1.getLastScreenRow(),
+        cls: "added",
+      },
+    ]);
+  });
+
+  it("keeps the previous items when an edit has outdated the chunks", () => {
+    service.emitter.emit("did-update-diff", {
+      chunks: [{ oldLineStart: 40, oldLineEnd: 42, newLineStart: 40, newLineEnd: 42 }],
+      editor1,
+      editor2,
+    });
+    const before = layer1.items;
+    expect(before.length).toBe(1);
+
+    // The buffer shrinks below the chunk before the next diff lands. Rows past
+    // the end clip to the last line, which would pile every marker at the
+    // bottom of the map, so the layer holds what it had.
+    editor1.setText("one line\n");
+    layer1.updateSync();
+
+    expect(layer1.items).toBe(before);
+  });
+
   it("clears the previous editors when the diff view is closed", () => {
     service.emitter.emit("did-update-diff", {
       chunks: [{ oldLineStart: 2, oldLineEnd: 4, newLineStart: 2, newLineEnd: 4 }],
