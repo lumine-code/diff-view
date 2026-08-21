@@ -1,5 +1,5 @@
-// The spec runner freezes setTimeout, so completion of the background diff
-// process is awaited by polling on animation frames instead of timers.
+// The spec runner freezes setTimeout, so the editors a diff opens are awaited
+// by polling on animation frames instead of timers.
 function pollUntil(condition, timeoutMs = 15000) {
   const start = performance.now();
   return new Promise((resolve, reject) => {
@@ -83,6 +83,76 @@ describe("diff-view", () => {
       const footer = workspaceElement.querySelector(".diff-view-ui");
       expect(footer).not.toBeNull();
       expect(footer.querySelector(".num-diff-text").textContent).toBe("difference");
+    });
+
+    describe("when the diff runs out of its compute budget", () => {
+      // jsdiff spends the budget against Date.now, which the harness freezes.
+      beforeEach(() => jasmine.useRealClock());
+
+      // Every other line differs, which is the shape the O(ND) diff costs the
+      // most on. A 1ms budget makes it give up regardless of the machine.
+      function pathologicalPair(differences) {
+        const oldLines = [];
+        const newLines = [];
+        for (let i = 0; i < differences; i++) {
+          oldLines.push(`old ${i}`, `same ${i}`);
+          newLines.push(`new ${i}`, `same ${i}`);
+        }
+        return [oldLines.join("\n") + "\n", newLines.join("\n") + "\n"];
+      }
+
+      it("says so in the footer instead of drawing an empty diff", async () => {
+        const [text1, text2] = pathologicalPair(500);
+        const { editor1, editor2 } = await openEditorsSideBySide(text1, text2);
+
+        mainModule.diffEditors(editor1, editor2, {
+          autoDiff: false,
+          muteNotifications: true,
+          computeTimeout: 1,
+        });
+        await pollUntil(
+          () =>
+            workspaceElement.querySelector(".diff-view-ui .num-diff-text")?.textContent ===
+            "too many differences",
+        );
+
+        expect(workspaceElement.querySelector(".diff-view-ui .num-diff-value").textContent).toBe(
+          "",
+        );
+        expect(editor1.getDecorations({ type: "line" }).length).toBe(0);
+        expect(editor2.getDecorations({ type: "line" }).length).toBe(0);
+      });
+
+      it("warns with the budget it gave up at", async () => {
+        const [text1, text2] = pathologicalPair(500);
+        const { editor1, editor2 } = await openEditorsSideBySide(text1, text2);
+        const warnings = [];
+        spyOn(lumine.notifications, "addWarning").and.callFake((title, options) =>
+          warnings.push(options.detail),
+        );
+
+        mainModule.diffEditors(editor1, editor2, { autoDiff: false, computeTimeout: 1 });
+        await pollUntil(() => warnings.length > 0);
+
+        expect(warnings[0]).toContain("1ms");
+        expect(warnings[0]).toContain("Compute Timeout");
+      });
+
+      it("draws the diff normally once the budget allows it", async () => {
+        const [text1, text2] = pathologicalPair(500);
+        const { editor1, editor2 } = await openEditorsSideBySide(text1, text2);
+
+        mainModule.diffEditors(editor1, editor2, {
+          autoDiff: false,
+          muteNotifications: true,
+          computeTimeout: 0,
+        });
+        await pollUntil(
+          () => mainModule.diffView != null && mainModule.diffView.getNumDifferences() === 500,
+        );
+
+        expect(editor1.getDecorations({ type: "line" }).length).toBeGreaterThan(0);
+      });
     });
 
     it("disable() clears the diff state and decorations", async () => {

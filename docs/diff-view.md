@@ -92,6 +92,8 @@ Chunks describe rows in the two editors' buffers. Re-read them after every `onDi
 
 `onDidUpdate` fires on recomputation, which includes the comparison being torn down — so a callback should handle `getDiffView()` answering `null`.
 
+**An update can also carry no chunks for a comparison that is still running.** The diff is computed in the window under the Compute Timeout budget, and a pair that differs almost everywhere can exhaust it; the update then reports empty chunks so consumers clear what they drew, and `getMarkerLayers()` resolves with the emptied layers rather than never settling.
+
 ## Teardown
 
 Return a `Disposable` that unsubscribes and clears what you drew. The marker layers belong to `diff-view`; do not destroy them, and do not call `disable()` as part of your own teardown — that turns off a feature the user asked for.

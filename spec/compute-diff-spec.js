@@ -1,23 +1,16 @@
-const path = require("path");
-const { BufferedNodeProcess } = require("lumine");
 const computeDiffModule = require("../lib/compute-diff");
 
-// The spec runner freezes setTimeout, so the child process is awaited by
-// polling on animation frames instead of timers.
-function pollUntil(condition, timeoutMs = 15000) {
-  const start = performance.now();
-  return new Promise((resolve, reject) => {
-    const check = () => {
-      if (condition()) {
-        resolve();
-      } else if (performance.now() - start > timeoutMs) {
-        reject(new Error("Timed out waiting for the diff process"));
-      } else {
-        requestAnimationFrame(check);
-      }
-    };
-    check();
-  });
+// A pair whose every other line differs, which is the shape the diff costs the
+// most on: the algorithm is O(ND) in the number of differences, so this is what
+// the compute budget exists to bound.
+function interleavedPair(differences) {
+  const oldLines = [];
+  const newLines = [];
+  for (let i = 0; i < differences; i++) {
+    oldLines.push(`old ${i}`, `same ${i}`);
+    newLines.push(`new ${i}`, `same ${i}`);
+  }
+  return [oldLines.join("\n") + "\n", newLines.join("\n") + "\n"];
 }
 
 describe("compute-diff", () => {
@@ -68,7 +61,7 @@ describe("compute-diff", () => {
       expect(withoutIgnoring.chunks.length).toBe(1);
     });
 
-    it("accepts the whitespace flag as a string, as a spawned process receives it", () => {
+    it("accepts the whitespace flag as a string, as a service consumer may pass it", () => {
       const result = computeDiffModule.computeDiff("a\n    b\n", "a\nb\n", "true");
       expect(result.chunks).toEqual([]);
     });
@@ -87,55 +80,45 @@ describe("compute-diff", () => {
     });
   });
 
-  describe("the child-process protocol", () => {
-    // The window hands the text over on stdin and parses one JSON line back.
-    // Spawned exactly as the package does, so the transport itself is what is
-    // under test — including the cmd.exe wrapper BufferedProcess uses on
-    // Windows, which the payload has to pass through.
-    async function runComputeDiff(payload) {
-      const chunks = [];
-      let exitCode = null;
-      let stderrOutput = "";
+  describe("the compute budget", () => {
+    // The diff runs in the window, so the budget is what stands between a
+    // pathological pair and a frozen window. Both cases use the same fixture so
+    // the only variable is the budget itself.
 
-      const child = new BufferedNodeProcess({
-        command: path.resolve(__dirname, "../lib/compute-diff.js"),
-        stdout: (output) => chunks.push(output),
-        stderr: (output) => (stderrOutput += output),
-        exit: (code) => (exitCode = code),
-      });
-      child.process.stdin.end(JSON.stringify(payload));
+    // jsdiff spends the budget against Date.now, which the harness freezes.
+    beforeEach(() => jasmine.useRealClock());
 
-      await pollUntil(() => exitCode !== null);
-      expect(stderrOutput).toBe("");
-      expect(exitCode).toBe(0);
-      return chunks;
-    }
-
-    it("reads the payload from stdin and delivers the diff in one callback", async () => {
-      const chunks = await runComputeDiff({
-        oldText: "a\nb\nc\n",
-        newText: "a\nx\nc\n",
-        ignoreWhitespace: false,
-      });
-
-      // The window parses the output in one go, so it has to arrive whole.
-      expect(chunks.length).toBe(1);
-      const parsed = JSON.parse(chunks[0]);
-      expect(parsed.chunks).toEqual(
-        computeDiffModule.computeDiff("a\nb\nc\n", "a\nx\nc\n", false).chunks,
-      );
+    it("returns null rather than running past the budget", () => {
+      const [oldText, newText] = interleavedPair(500);
+      expect(computeDiffModule.computeDiff(oldText, newText, false, 1)).toBe(null);
     });
 
-    it("carries a payload larger than a pipe buffer", async () => {
+    it("takes zero as no limit and finishes the same pair", () => {
+      const [oldText, newText] = interleavedPair(500);
+      const result = computeDiffModule.computeDiff(oldText, newText, false, 0);
+      expect(result).not.toBe(null);
+      expect(result.chunks.length).toBe(500);
+    });
+
+    it("leaves the budget off when none is given", () => {
+      const [oldText, newText] = interleavedPair(500);
+      const result = computeDiffModule.computeDiff(oldText, newText, false);
+      expect(result).not.toBe(null);
+      expect(result.chunks.length).toBe(500);
+    });
+
+    it("diffs a large pair well inside the default budget", () => {
       const oldText = Array.from({ length: 20000 }, (_, i) => `line ${i}`).join("\n") + "\n";
       const newText = oldText.replace("line 19999", "line 19999 changed");
 
-      const chunks = await runComputeDiff({ oldText, newText, ignoreWhitespace: false });
+      const start = performance.now();
+      const result = computeDiffModule.computeDiff(oldText, newText, false, 250);
+      const elapsed = performance.now() - start;
 
-      expect(chunks.length).toBe(1);
-      const parsed = JSON.parse(chunks[0]);
-      expect(parsed.chunks.length).toBe(1);
-      expect(parsed.chunks[0].oldLineStart).toBe(19999);
+      expect(result).not.toBe(null);
+      expect(result.chunks.length).toBe(1);
+      expect(result.chunks[0].oldLineStart).toBe(19999);
+      expect(elapsed).toBeLessThan(250);
     });
   });
 });
