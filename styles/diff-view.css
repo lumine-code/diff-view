@@ -34,7 +34,7 @@ lumine-text-editor {
 }
 
 .diff-view-loading-icon {
-  --spinner-color: var(--text-color-info);
+  --spinner-color: var(--accent-color);
   --spinner-duration: 1.2s;
   position: relative;
   display: inline-block;
