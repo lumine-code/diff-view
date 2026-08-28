@@ -71,6 +71,33 @@ describe("compute-diff", () => {
       expect(result.chunks).toEqual([]);
     });
 
+    it("does not report CRLF versus LF as a difference", () => {
+      const result = computeDiffModule.computeDiff("a\r\nb\r\nc\r\n", "a\nb\nc\n", false);
+      expect(result.chunks).toEqual([]);
+    });
+
+    it("does not report bare CR versus LF as a difference", () => {
+      const result = computeDiffModule.computeDiff("a\rb\rc\r", "a\nb\nc\n", false);
+      expect(result.chunks).toEqual([]);
+    });
+
+    it("removes trailing CRLFs before adding the canonical newline", () => {
+      const result = computeDiffModule.computeDiff("a\r\nb\r\n\r\n", "a\nb", false);
+      expect(result.chunks).toEqual([]);
+    });
+
+    it("maps changes in bare-CR text to their logical rows", () => {
+      const result = computeDiffModule.computeDiff("a\rb\rc\r", "a\rx\rc\r", false);
+      expect(result.chunks).toEqual([
+        {
+          newLineStart: 1,
+          newLineEnd: 2,
+          oldLineStart: 1,
+          oldLineEnd: 2,
+        },
+      ]);
+    });
+
     it("handles an empty side", () => {
       const added = computeDiffModule.computeDiff("", "a\nb\n", false);
       expect(added.chunks.length).toBeGreaterThan(0);

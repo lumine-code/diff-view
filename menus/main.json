@@ -1,18 +1,4 @@
 {
-  "context-menu": {
-    ".tree-view .full-menu:not(.multi-select) .file.selected": [
-      {
-        "type": "separator"
-      },
-      {
-        "label": "Diff with Active File",
-        "command": "diff-view:enable"
-      },
-      {
-        "type": "separator"
-      }
-    ]
-  },
   "menu": [
     {
       "label": "Packages",
@@ -23,6 +9,10 @@
             {
               "label": "Toggle",
               "command": "diff-view:toggle"
+            },
+            {
+              "label": "Diff with Saved File",
+              "command": "diff-view:diff-with-saved-file"
             },
             {
               "label": "Diff with Git HEAD",
@@ -36,5 +26,31 @@
         }
       ]
     }
-  ]
+  ],
+  "context-menu": {
+    ".tree-view .full-menu:not(.multi-select) .file.selected": [
+      {
+        "type": "separator"
+      },
+      {
+        "label": "Diff with Active File",
+        "command": "diff-view:enable"
+      },
+      {
+        "type": "separator"
+      }
+    ],
+    ".tab.texteditor": [
+      {
+        "type": "separator"
+      },
+      {
+        "label": "Diff with Active File",
+        "command": "diff-view:enable"
+      },
+      {
+        "type": "separator"
+      }
+    ]
+  }
 }

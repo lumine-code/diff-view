@@ -9,6 +9,7 @@ Compare files side-by-side with synchronized scrolling, soft-wrap support, git i
 - **Side-by-side diff**: highlights added, removed, and changed lines in two editors.
 - **Word diff**: highlights the changed words within each modified line.
 - **Git integration**: diff the active file against its git HEAD or a previous commit.
+- **Saved-file comparison**: diff the current buffer against the version on disk, including externally changed or removed files.
 - **Soft-wrap support**: diff works correctly with soft wrap enabled, including proper line offsets and scroll synchronization.
 - **Buffer-based scroll sync**: uses buffer line positions for proper alignment across different soft-wrap settings.
 - **Quick toggle buttons**: footer buttons for soft-wrap toggle and equalizing pane widths.
@@ -33,6 +34,7 @@ Commands available in `lumine-workspace`:
 - `diff-view:copy-to-left`: copy current diff chunk to left editor,
 - `diff-view:git-head`: diff active file with git HEAD,
 - `diff-view:git-commit`: diff active file with previous commit,
+- `diff-view:diff-with-saved-file`: diff the current buffer with the version saved on disk,
 - `diff-view:toggle-soft-wrap`: toggle soft wrap during diff,
 - `diff-view:equalize-widths`: equalize pane widths,
 - `diff-view:toggle-center-line`: toggle center line indicator,
