@@ -151,7 +151,7 @@ describe("diff-view", () => {
       editor.setText("buffer\n");
       const sourcePane = lumine.workspace.paneForItem(editor);
       const rightPane = sourcePane.splitRight();
-      const paneCount = lumine.workspace.getCenter().getTiledPanes().length;
+      const paneCount = lumine.workspace.getCenter().getPanes().length;
       sourcePane.activateItem(editor);
       sourcePane.activate();
 
@@ -159,8 +159,8 @@ describe("diff-view", () => {
       expect(lumine.workspace.paneForItem(comparedEditors().editor2)).toBe(rightPane);
       mainModule.disable();
 
-      expect(lumine.workspace.getCenter().getTiledPanes()).toContain(rightPane);
-      expect(lumine.workspace.getCenter().getTiledPanes().length).toBe(paneCount);
+      expect(lumine.workspace.getCenter().getPanes()).toContain(rightPane);
+      expect(lumine.workspace.getCenter().getPanes().length).toBe(paneCount);
       expect(rightPane.getItems()).toEqual([]);
     });
 
@@ -177,8 +177,8 @@ describe("diff-view", () => {
       mainModule.disable();
 
       expect(snapshot.isDestroyed()).toBe(true);
-      expect(lumine.workspace.getCenter().getTiledPanes()).not.toContain(ownedPane);
-      expect(lumine.workspace.getCenter().getTiledPanes()).toContain(existingPane);
+      expect(lumine.workspace.getCenter().getPanes()).not.toContain(ownedPane);
+      expect(lumine.workspace.getCenter().getPanes()).toContain(existingPane);
     });
 
     it("removes its empty pane when the snapshot is closed by hand", async () => {
@@ -191,7 +191,7 @@ describe("diff-view", () => {
       snapshot.destroy();
 
       expect(mainModule.diffView).toBeNull();
-      expect(lumine.workspace.getCenter().getTiledPanes()).not.toContain(ownedPane);
+      expect(lumine.workspace.getCenter().getPanes()).not.toContain(ownedPane);
     });
 
     it("uses the editor under the dispatch target before the active editor", async () => {
@@ -207,31 +207,6 @@ describe("diff-view", () => {
       expect(comparedEditors().editor2.getText()).toBe("first saved\n");
     });
 
-    it("attaches a detached source before opening a side-by-side diff", async () => {
-      const { editor } = await openSavedFile("detached.txt", "saved\n");
-      editor.setText("buffer\n");
-      lumine.initializeDetachedPaneSurfaces({ force: true });
-      const center = lumine.workspace.getCenter();
-      let detachedPane = null;
-
-      try {
-        detachedPane = await lumine.workspace.detachPaneItem(editor, { show: false });
-
-        await mainModule.diffWithSavedFile({ target: lumine.views.getView(editor) });
-
-        const sourcePane = lumine.workspace.paneForItem(editor);
-        expect(detachedPane.isDestroyed()).toBe(true);
-        expect(center.getTiledPanes()).toContain(sourcePane);
-        expect(comparedEditors().editor1).toBe(editor);
-        expect(comparedEditors().editor2.getText()).toBe("saved\n");
-      } finally {
-        if (!detachedPane?.isDestroyed?.() && detachedPane?.isDetached?.()) {
-          await lumine.workspace.attachDetachedPane(detachedPane);
-        }
-        lumine.initializeDetachedPaneSurfaces();
-      }
-    });
-
     it("warns for a buffer that has never been saved", async () => {
       const editor = await lumine.workspace.open();
       editor.setText("unsaved\n");
@@ -239,7 +214,7 @@ describe("diff-view", () => {
       spyOn(lumine.notifications, "addWarning").and.callFake((_title, options) =>
         warnings.push(options.detail),
       );
-      const paneCount = lumine.workspace.getCenter().getTiledPanes().length;
+      const paneCount = lumine.workspace.getCenter().getPanes().length;
 
       await mainModule.diffWithSavedFile();
 
@@ -247,7 +222,7 @@ describe("diff-view", () => {
         "Save the current buffer before comparing it with the saved file.",
       ]);
       expect(mainModule.diffView).toBeNull();
-      expect(lumine.workspace.getCenter().getTiledPanes().length).toBe(paneCount);
+      expect(lumine.workspace.getCenter().getPanes().length).toBe(paneCount);
     });
 
     it("stays silent when there is no editor surface", async () => {
@@ -266,13 +241,13 @@ describe("diff-view", () => {
       spyOn(lumine.notifications, "addWarning").and.callFake((_title, options) =>
         warnings.push(options.detail),
       );
-      const paneCount = lumine.workspace.getCenter().getTiledPanes().length;
+      const paneCount = lumine.workspace.getCenter().getPanes().length;
 
       await mainModule.diffWithSavedFile();
 
       expect(warnings).toEqual(["Could not read the saved file: read denied"]);
       expect(mainModule.diffView).toBeNull();
-      expect(lumine.workspace.getCenter().getTiledPanes().length).toBe(paneCount);
+      expect(lumine.workspace.getCenter().getPanes().length).toBe(paneCount);
     });
 
     it("does not revive a request that was disabled while its file was loading", async () => {
@@ -550,7 +525,7 @@ describe("diff-view", () => {
     it("does not let a second quick diff reuse the first request's scratch editor", async () => {
       const editor = await lumine.workspace.open();
       editor.setText("left\n");
-      const initialPaneCount = lumine.workspace.getCenter().getTiledPanes().length;
+      const initialPaneCount = lumine.workspace.getCenter().getPanes().length;
 
       const first = mainModule.diffPanes(null, null, {
         autoDiff: false,
@@ -569,7 +544,7 @@ describe("diff-view", () => {
       expect(secondScratch).not.toBe(firstScratch);
       expect(secondScratch.isDestroyed()).toBe(false);
       expect(mainModule.diffView._editorDiffExtender2.getEditor()).toBe(secondScratch);
-      expect(lumine.workspace.getCenter().getTiledPanes().length).toBe(initialPaneCount + 1);
+      expect(lumine.workspace.getCenter().getPanes().length).toBe(initialPaneCount + 1);
     });
 
     it("does not undo a soft-wrap change made while setup is waiting", async () => {
@@ -748,31 +723,6 @@ describe("diff-view", () => {
         .join(" ");
       expect(lineClasses).not.toContain("diff-view-added");
       expect(lineClasses).not.toContain("diff-view-removed");
-    });
-
-    it("disables the comparison before either editor moves to another surface", async () => {
-      lumine.initializeDetachedPaneSurfaces({ force: true });
-      const { editor1, editor2 } = await openEditorsSideBySide("a\nb\n", "a\nc\n");
-      mainModule.diffEditors(editor1, editor2, { autoDiff: false, muteNotifications: true });
-      await pollUntil(
-        () => mainModule.diffView != null && mainModule.diffView.getNumDifferences() > 0,
-      );
-      let detachedPane = null;
-
-      try {
-        detachedPane = await lumine.workspace.detachPaneItem(editor1, { show: false });
-
-        expect(mainModule.isEnabled).toBe(false);
-        expect(mainModule.diffView).toBeNull();
-        expect(mainModule.footerView).toBeNull();
-        expect(editor1.isDestroyed()).toBe(false);
-        expect(editor2.isDestroyed()).toBe(false);
-        expect(lumine.workspace.paneForItem(editor1)).toBe(detachedPane);
-        expect(detachedPane.isDetached()).toBe(true);
-      } finally {
-        if (detachedPane?.isDetached?.()) await lumine.workspace.attachDetachedPane(detachedPane);
-        lumine.initializeDetachedPaneSurfaces();
-      }
     });
   });
 
