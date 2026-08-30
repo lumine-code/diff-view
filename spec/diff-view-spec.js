@@ -742,6 +742,31 @@ describe("diff-view", () => {
       expect(lineClasses).not.toContain("diff-view-added");
       expect(lineClasses).not.toContain("diff-view-removed");
     });
+
+    it("disables the comparison before either editor moves to another surface", async () => {
+      lumine.initializeDetachedPaneSurfaces({ force: true });
+      const { editor1, editor2 } = await openEditorsSideBySide("a\nb\n", "a\nc\n");
+      mainModule.diffEditors(editor1, editor2, { autoDiff: false, muteNotifications: true });
+      await pollUntil(
+        () => mainModule.diffView != null && mainModule.diffView.getNumDifferences() > 0,
+      );
+      let detachedPane = null;
+
+      try {
+        detachedPane = await lumine.workspace.detachPaneItem(editor1, { show: false });
+
+        expect(mainModule.isEnabled).toBe(false);
+        expect(mainModule.diffView).toBeNull();
+        expect(mainModule.footerView).toBeNull();
+        expect(editor1.isDestroyed()).toBe(false);
+        expect(editor2.isDestroyed()).toBe(false);
+        expect(lumine.workspace.paneForItem(editor1)).toBe(detachedPane);
+        expect(detachedPane.isDetached()).toBe(true);
+      } finally {
+        if (detachedPane?.isDetached?.()) await lumine.workspace.attachDetachedPane(detachedPane);
+        lumine.initializeDetachedPaneSurfaces();
+      }
+    });
   });
 
   describe("when an edit outdates the diff", () => {
