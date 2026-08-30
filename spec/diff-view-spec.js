@@ -207,22 +207,29 @@ describe("diff-view", () => {
       expect(comparedEditors().editor2.getText()).toBe("first saved\n");
     });
 
-    it("requires a detached editor to be attached before a side-by-side diff", async () => {
+    it("attaches a detached source before opening a side-by-side diff", async () => {
       const { editor } = await openSavedFile("detached.txt", "saved\n");
       editor.setText("buffer\n");
+      lumine.initializeDetachedPaneSurfaces({ force: true });
       const center = lumine.workspace.getCenter();
-      const sourcePane = lumine.workspace.paneForItem(editor);
-      const tiledPanes = center.getTiledPanes().filter((pane) => pane !== sourcePane);
-      spyOn(center, "getTiledPanes").and.returnValue(tiledPanes);
-      const errors = [];
-      spyOn(lumine.notifications, "addError").and.callFake((_title, options) =>
-        errors.push(options.detail),
-      );
+      let detachedPane = null;
 
-      await mainModule.diffWithSavedFile();
+      try {
+        detachedPane = await lumine.workspace.detachPaneItem(editor, { show: false });
 
-      expect(errors).toEqual(["Attach the editor before opening a side-by-side diff."]);
-      expect(mainModule.diffView).toBeNull();
+        await mainModule.diffWithSavedFile({ target: lumine.views.getView(editor) });
+
+        const sourcePane = lumine.workspace.paneForItem(editor);
+        expect(detachedPane.isDestroyed()).toBe(true);
+        expect(center.getTiledPanes()).toContain(sourcePane);
+        expect(comparedEditors().editor1).toBe(editor);
+        expect(comparedEditors().editor2.getText()).toBe("saved\n");
+      } finally {
+        if (!detachedPane?.isDestroyed?.() && detachedPane?.isDetached?.()) {
+          await lumine.workspace.attachDetachedPane(detachedPane);
+        }
+        lumine.initializeDetachedPaneSurfaces();
+      }
     });
 
     it("warns for a buffer that has never been saved", async () => {
