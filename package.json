@@ -52,7 +52,8 @@
     "diff-view": {
       "versions": {
         "1.0.0": "provideDiffView"
-      }
+      },
+      "activateOnConsume": true
     },
     "marker.layer": {
       "versions": {
@@ -163,5 +164,25 @@
         }
       }
     }
+  },
+  "activationCommands": {
+    "lumine-workspace": [
+      "diff-view:close",
+      "diff-view:copy-to-left",
+      "diff-view:copy-to-right",
+      "diff-view:diff-with-saved-file",
+      "diff-view:disable",
+      "diff-view:enable",
+      "diff-view:equalize-widths",
+      "diff-view:git-commit",
+      "diff-view:git-head",
+      "diff-view:next-diff",
+      "diff-view:prev-diff",
+      "diff-view:set-auto-diff",
+      "diff-view:set-ignore-whitespace",
+      "diff-view:toggle",
+      "diff-view:toggle-center-line",
+      "diff-view:toggle-soft-wrap"
+    ]
   }
 }
