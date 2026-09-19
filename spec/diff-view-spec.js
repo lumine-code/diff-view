@@ -790,38 +790,22 @@ describe("diff-view", () => {
     });
   });
 
-  describe("custom highlight colors", () => {
-    function customStylesheet() {
-      const styleElement = document
-        .querySelectorAll("style[source-path='diff-view-custom-styles']")
-        .item(0);
-      return styleElement != null ? styleElement.textContent : null;
-    }
+  describe("highlight colors", () => {
+    it("uses package CSS variables with syntax color fallbacks", () => {
+      const stylesheet = fs.readFileSync(
+        path.join(__dirname, "..", "styles", "diff-view.css"),
+        "utf8",
+      );
 
-    function alphaOf(stylesheet, selector) {
-      const rule = new RegExp(`\\${selector}\\s*\\{[^}]*background-color:\\s*rgba\\(([^)]*)\\)`);
-      const match = stylesheet.match(rule);
-      return match != null ? Number(match[1].split(",").pop().trim()) : null;
-    }
-
-    it("keeps the line highlights lighter than the word highlights", () => {
-      const stylesheet = customStylesheet();
-      expect(stylesheet).not.toBeNull();
-
-      // The two alphas come from one color object per side, so aliasing it
-      // would silently give every highlight the word alpha.
-      expect(alphaOf(stylesheet, ".diff-view-added-custom")).toBe(0.4);
-      expect(alphaOf(stylesheet, ".diff-view-removed-custom")).toBe(0.4);
-      expect(alphaOf(stylesheet, ".diff-view-word-added-custom .region")).toBe(0.5);
-      expect(alphaOf(stylesheet, ".diff-view-word-removed-custom .region")).toBe(0.5);
+      expect(stylesheet).toContain("var(--diff-view-added-color, var(--syntax-color-added))");
+      expect(stylesheet).toContain("var(--diff-view-removed-color, var(--syntax-color-removed))");
     });
 
-    it("recomputes both alphas when the color changes", () => {
-      lumine.config.set("diff-view.addedColor", "#123456");
-
-      const stylesheet = customStylesheet();
-      expect(stylesheet).toContain("rgba(18, 52, 86, 0.4)");
-      expect(stylesheet).toContain("rgba(18, 52, 86, 0.5)");
+    it("does not register redundant color settings", () => {
+      const { configSchema } = lumine.packages.getActivePackage("diff-view").metadata;
+      expect(configSchema.overrideThemeColors).toBeUndefined();
+      expect(configSchema.addedColor).toBeUndefined();
+      expect(configSchema.removedColor).toBeUndefined();
     });
   });
 

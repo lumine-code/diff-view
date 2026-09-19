@@ -43,11 +43,12 @@ Commands available in `lumine-workspace`:
 
 ## Customization
 
-The diff highlights can be tweaked from your stylesheet, e.g. in `styles.css`:
+The diff highlights follow `--syntax-color-added` and `--syntax-color-removed`. Override their package-specific aliases in your stylesheet, e.g. in `styles.css`:
 
 ```css
-lumine-text-editor .line.diff-view-line.diff-view-added {
-  background-color: color-mix(in srgb, var(--syntax-color-added) 35%, transparent);
+lumine-text-editor {
+  --diff-view-added-color: #4caf50;
+  --diff-view-removed-color: #f44336;
 }
 ```
 

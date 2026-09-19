@@ -2,10 +2,10 @@
   z-index: 12;
 
   &.added {
-    background-color: var(--text-color-success);
+    background-color: var(--diff-view-added-color, var(--syntax-color-added));
   }
 
   &.removed {
-    background-color: var(--text-color-error);
+    background-color: var(--diff-view-removed-color, var(--syntax-color-removed));
   }
 }

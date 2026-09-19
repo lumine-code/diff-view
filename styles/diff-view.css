@@ -3,11 +3,19 @@ lumine-text-editor {
   .line {
     &.diff-view-line {
       &.diff-view-added {
-        background-color: color-mix(in srgb, var(--syntax-color-added) 20%, transparent);
+        background-color: color-mix(
+          in srgb,
+          var(--diff-view-added-color, var(--syntax-color-added)) 20%,
+          transparent
+        );
       }
 
       &.diff-view-removed {
-        background-color: color-mix(in srgb, var(--syntax-color-removed) 20%, transparent);
+        background-color: color-mix(
+          in srgb,
+          var(--diff-view-removed-color, var(--syntax-color-removed)) 20%,
+          transparent
+        );
       }
 
       &.diff-view-selected {
@@ -17,11 +25,19 @@ lumine-text-editor {
   }
 
   .diff-view-word-added .region {
-    background-color: color-mix(in srgb, var(--syntax-color-added) 20%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--diff-view-added-color, var(--syntax-color-added)) 20%,
+      transparent
+    );
   }
 
   .diff-view-word-removed .region {
-    background-color: color-mix(in srgb, var(--syntax-color-removed) 20%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--diff-view-removed-color, var(--syntax-color-removed)) 20%,
+      transparent
+    );
   }
 
   .diff-view-offset {

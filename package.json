@@ -126,24 +126,6 @@
       ],
       "default": "left"
     },
-    "overrideThemeColors": {
-      "title": "Override Highlight Colors",
-      "description": "Override the line highlight colors (defined by variables in your selected syntax theme) with the colors selected below.",
-      "type": "boolean",
-      "default": false
-    },
-    "addedColor": {
-      "title": "Added Custom Color",
-      "description": "The color that will be used for highlighting added lines when **Override Highlight Colors** is checked.",
-      "type": "color",
-      "default": "green"
-    },
-    "removedColor": {
-      "title": "Removed Custom Color",
-      "description": "The color that will be used for highlighting removed lines when **Override Highlight Colors** is checked.",
-      "type": "color",
-      "default": "red"
-    },
     "marker": {
       "title": "Marker",
       "description": "Settings of the diff-view layer drawn on the scrollbar and minimap by the marker hub.",
