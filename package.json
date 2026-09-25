@@ -19,10 +19,6 @@
   "engines": {
     "lumine": "^1.0.0"
   },
-  "backgroundTips": [
-    "{% if keys['diff-view:git-head'] %}You can diff the current file against its last commit with {{ 'diff-view:git-head' | keystroke }}{% else %}You can diff two files side by side, or the current file against its last commit.{% endif %}",
-    "{% if keys['diff-view:diff-with-saved-file'] %}Compare the current buffer with its saved file using {{ 'diff-view:diff-with-saved-file' | keystroke }}{% else %}Compare the current buffer with its saved file before resolving an external change or deletion.{% endif %}"
-  ],
   "main": "./lib/diff-view",
   "files": [
     "docs",
@@ -37,17 +33,6 @@
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
-  "dependencies": {
-    "diff": "^9.0.0"
-  },
-  "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "eslint": "^10.9.1",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-n": "^18.3.0",
-    "globals": "^17.11.0",
-    "prettier": "^3.9.6"
-  },
   "providedServices": {
     "diff-view": {
       "versions": {
@@ -58,7 +43,23 @@
       "versions": {
         "1.0.0": "provideMarkerLayer"
       }
+    },
+    "background-tips.provider": {
+      "versions": {
+        "1.0.0": "provideBackgroundTips"
+      }
     }
+  },
+  "dependencies": {
+    "diff": "^9.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.9.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-n": "^18.3.0",
+    "globals": "^17.11.0",
+    "prettier": "^3.9.6"
   },
   "configSchema": {
     "autoDiff": {
