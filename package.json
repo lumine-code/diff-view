@@ -82,7 +82,7 @@
     },
     "computeTimeout": {
       "title": "Compute Timeout",
-      "description": "Milliseconds to spend computing a diff before giving up. The cost grows with the number of differences rather than the size of the files, so a pair that differs almost everywhere can take seconds; raise this to allow a slower diff, at the cost of the window freezing for that long. Zero means no limit.",
+      "description": "Milliseconds to spend comparing lines and words. If the line comparison exceeds the limit, no diff is drawn; if word comparison exhausts the remaining time, line highlights are kept without further word highlights. Raise this to allow a slower comparison. Zero means no limit.",
       "type": "integer",
       "minimum": 0,
       "default": 250
