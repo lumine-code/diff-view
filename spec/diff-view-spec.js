@@ -619,20 +619,21 @@ describe("diff-view", () => {
       expect(classesOf(removed)).toContain("diff-view-removed");
     });
 
-    it("closes the diff from a footer control without closing either editor", async () => {
+    it("closes the center document from a footer control while retaining its diff", async () => {
       const { editor1, editor2 } = await openEditorsSideBySide("one\ntwo\n", "one\nfoo\n");
       mainModule.diffEditors(editor1, editor2, { autoDiff: false, muteNotifications: true });
       await pollUntil(() => mainModule.footerView != null);
-      spyOn(lumine.workspace, "closeActivePaneItemOrEmptyPaneOrWindow");
+      const footer = mainModule.footerView;
+      const closingEditor = await lumine.workspace.open();
 
       await lumine.commands.dispatch(
         mainModule.footerView.element.querySelector(".next-diff"),
         "core:close",
       );
 
-      expect(mainModule.isEnabled).toBe(false);
-      expect(mainModule.footerView).toBeNull();
-      expect(lumine.workspace.closeActivePaneItemOrEmptyPaneOrWindow).not.toHaveBeenCalled();
+      expect(closingEditor.isDestroyed()).toBe(true);
+      expect(mainModule.isEnabled).toBe(true);
+      expect(mainModule.footerView).toBe(footer);
       expect(editor1.isDestroyed()).toBe(false);
       expect(editor2.isDestroyed()).toBe(false);
     });
