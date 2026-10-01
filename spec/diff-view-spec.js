@@ -1,7 +1,7 @@
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
-const { FileState, TextBuffer } = require("lumine");
+const { TextBuffer } = require("lumine");
 
 // The spec runner freezes setTimeout, so the editors a diff opens are awaited
 // by polling on animation frames instead of timers.
@@ -93,10 +93,10 @@ describe("diff-view", () => {
       const compared = comparedEditors();
       expect(compared.editor1).toBe(editor);
       expect(compared.editor1.getText()).toBe("changed in buffer\n");
-      expect(compared.editor1.getBuffer().getFileState()).toBe(FileState.MODIFIED);
+      expect(compared.editor1.getBuffer().getFileState()).toBe("modified");
       expect(compared.editor2.getText()).toBe("saved\n");
       expect(compared.editor2.getPath()).toBeUndefined();
-      expect(compared.editor2.getBuffer().getFileState()).toBe(FileState.UNMODIFIED);
+      expect(compared.editor2.getBuffer().getFileState()).toBe("unmodified");
       expect(mainModule.diffView.getNumDifferences()).toBe(1);
 
       mainModule.disable();
@@ -108,7 +108,7 @@ describe("diff-view", () => {
       const { editor, filePath } = await openSavedFile("conflicted.txt", "original\n");
       editor.setText("local changes\n");
       fs.writeFileSync(filePath, "external changes\n");
-      editor.getBuffer().setFileState(FileState.CONFLICTED);
+      editor.getBuffer().setFileState("conflicted");
 
       await mainModule.diffWithSavedFile();
 
@@ -134,7 +134,7 @@ describe("diff-view", () => {
       const { editor, filePath } = await openSavedFile("removed.txt", "saved\n");
       editor.setText("kept in buffer\n");
       fs.unlinkSync(filePath);
-      editor.getBuffer().setFileState(FileState.REMOVED);
+      editor.getBuffer().setFileState("removed");
       const repositoryForPath = spyOn(lumine.project, "repositoryForPath").and.returnValue(
         Promise.resolve({ getFileAtRevision: () => Promise.resolve("git head\n") }),
       );
