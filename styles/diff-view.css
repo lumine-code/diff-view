@@ -50,7 +50,7 @@ lumine-text-editor {
 }
 
 .diff-view-loading-icon {
-  --spinner-color: var(--accent-color);
+  --spinner-color: var(--accent-indicator-color);
   --spinner-duration: 1.2s;
   position: relative;
   display: inline-block;
