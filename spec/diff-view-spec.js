@@ -1,7 +1,7 @@
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
-const { TextBuffer } = require("lumine");
+const { Disposable, TextBuffer } = require("lumine");
 
 // The spec runner freezes setTimeout, so the editors a diff opens are awaited
 // by polling on animation frames instead of timers.
@@ -51,6 +51,7 @@ describe("diff-view", () => {
     beforeEach(() => {
       tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "diff-view-saved-"));
       tempEditors = [];
+      spyOn(lumine.repositories, "retain").and.callFake(() => new Disposable());
     });
 
     afterEach(() => {
@@ -135,7 +136,7 @@ describe("diff-view", () => {
       editor.setText("kept in buffer\n");
       fs.unlinkSync(filePath);
       editor.getBuffer().setFileState("removed");
-      const repositoryForPath = spyOn(lumine.project, "repositoryForPath").and.returnValue(
+      const repositoryForPath = spyOn(lumine.repositories, "resolveForPath").and.returnValue(
         Promise.resolve({ getFileAtRevision: () => Promise.resolve("git head\n") }),
       );
 
@@ -358,7 +359,7 @@ describe("diff-view", () => {
       await targetEditor.getBuffer().getFileWatchStartPromise();
       tempEditors.push(targetEditor);
       targetEditor.setText("unsaved target\n");
-      spyOn(lumine.project, "repositoryForPath").and.returnValue(
+      spyOn(lumine.repositories, "resolveForPath").and.returnValue(
         Promise.resolve({ getFileAtRevision: () => Promise.resolve("head target\n") }),
       );
       const tab = {
@@ -383,7 +384,7 @@ describe("diff-view", () => {
       const { editor } = await openSavedFile("explicit.txt", "left\n");
       lumine.workspace.getActivePane().splitRight();
       const emptyEditor = await lumine.workspace.open();
-      const repositoryForPath = spyOn(lumine.project, "repositoryForPath").and.returnValue(
+      const repositoryForPath = spyOn(lumine.repositories, "resolveForPath").and.returnValue(
         Promise.resolve({ getFileAtRevision: () => Promise.resolve("git head\n") }),
       );
 
@@ -401,7 +402,7 @@ describe("diff-view", () => {
       await openSavedFile("empty-target-left.txt", "left\n");
       const emptyPath = path.join(tempDir, "empty-target.txt");
       fs.writeFileSync(emptyPath, "");
-      const repositoryForPath = spyOn(lumine.project, "repositoryForPath").and.returnValue(
+      const repositoryForPath = spyOn(lumine.repositories, "resolveForPath").and.returnValue(
         Promise.resolve({ getFileAtRevision: () => Promise.resolve("git head\n") }),
       );
       const treeEntry = { dataset: { path: emptyPath }, querySelector: () => null };
@@ -423,7 +424,7 @@ describe("diff-view", () => {
 
     it("computes a quick Git fallback even when auto diff is disabled", async () => {
       await openSavedFile("quick-git.txt", "working tree\n");
-      spyOn(lumine.project, "repositoryForPath").and.returnValue(
+      spyOn(lumine.repositories, "resolveForPath").and.returnValue(
         Promise.resolve({ getFileAtRevision: () => Promise.resolve("git head\n") }),
       );
 
@@ -435,7 +436,7 @@ describe("diff-view", () => {
 
     it("does not insert the word Mixed into a Git snapshot", async () => {
       await openSavedFile("mixed.txt", "one\r\ntwo\n");
-      spyOn(lumine.project, "repositoryForPath").and.returnValue(
+      spyOn(lumine.repositories, "resolveForPath").and.returnValue(
         Promise.resolve({ getFileAtRevision: () => Promise.resolve("one\nchanged\n") }),
       );
 
@@ -450,7 +451,7 @@ describe("diff-view", () => {
       const target = await openSavedFile("git-target.txt", "target\n");
       const targetPane = lumine.workspace.paneForItem(target.editor);
       targetPane.activateItem(active.editor);
-      spyOn(lumine.project, "repositoryForPath").and.returnValue(
+      spyOn(lumine.repositories, "resolveForPath").and.returnValue(
         Promise.resolve({ getFileAtRevision: () => Promise.resolve("head target\n") }),
       );
       const treeEntry = { dataset: { path: target.filePath }, querySelector: () => null };
