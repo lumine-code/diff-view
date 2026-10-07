@@ -33,8 +33,8 @@ describe("view zone alignment", () => {
   }
 
   it("sums a line owed height by the wrap walk and by a chunk at once", () => {
-    // Every left line wraps to two rows; the right side wraps to one — so the
-    // per-line walk owes the right side one row per line. Lines 3-4 are also
+    // Every left line wraps; the right side stays unwrapped — so the
+    // per-line walk owes the right side the extra rows. Lines 3-4 are also
     // deleted on the right, so the delete chunk owes the gap after line 2 too.
     // Both land on line 2, and dropping either walks the sides apart by
     // exactly that height on every unequal-width resize.
@@ -45,6 +45,7 @@ describe("view zone alignment", () => {
     const narrow = wide.slice();
     narrow.splice(3, 2);
     editor2.setText(narrow.join("\n"));
+    editor2.setSoftWrapped(false);
 
     diffView = new DiffView({ editor1, editor2 });
     diffView._chunks = [{ oldLineStart: 3, oldLineEnd: 5, newLineStart: 3, newLineEnd: 3 }];
@@ -53,6 +54,7 @@ describe("view zone alignment", () => {
     const lineHeight = editor1.getLineHeightInPixels();
     const rowsPerLeftLine = editor1.screenRowForBufferRow(1) - editor1.screenRowForBufferRow(0);
     expect(rowsPerLeftLine).toBeGreaterThan(1);
+    expect(editor2.getScreenLineCount()).toBe(narrow.length);
 
     // Line 2's zone carries both debts: its own wrap difference plus the
     // deleted chunk's rows.
