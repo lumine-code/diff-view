@@ -151,7 +151,7 @@ lumine-text-editor {
   .center-line {
     &.selected {
       background-color: var(--button-background-color-selected);
-      color: var(--text-color-selected);
+      color: var(--button-text-color-selected);
     }
   }
 }
