@@ -16,6 +16,7 @@ describe("diff-view Git read requests", () => {
     jasmine.attachToDOM(lumine.workspace.getElement());
     main = (await lumine.packages.activatePackage("diff-view")).mainModule;
     editor = await lumine.workspace.open(__filename);
+    editor.setText("working copy\n");
     repository = {
       getFileAtRevision: jasmine.createSpy("getFileAtRevision").and.resolveTo("from Git\n"),
     };
@@ -44,6 +45,12 @@ describe("diff-view Git read requests", () => {
     await comparing;
     expect(releases[0]).toHaveBeenCalledTimes(1);
     expect(main.diffView._editorDiffExtender2.getEditor().getText()).toBe("from Git\n");
+  });
+
+  it("normalizes Git text to the working copy's CRLF line endings", async () => {
+    editor.setText("working copy\r\n");
+    await main.diffGit();
+    expect(main.diffView._editorDiffExtender2.getEditor().getText()).toBe("from Git\r\n");
   });
 
   it("aborts a disabled Git comparison and ignores its late read failure", async () => {
