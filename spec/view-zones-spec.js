@@ -19,6 +19,78 @@ describe("view zones", () => {
   }
 
   describe("syncViewZones", () => {
+    it("places a leading zone before the first screen row of a wrapped line", () => {
+      editor.setText(`${"group ".repeat(12)}\nbody\nend`);
+      lumine.config.set("editor.softWrapAtPreferredLineLength", true);
+      lumine.config.set("editor.preferredLineLength", 20);
+      editor.setSoftWrapped(true);
+      editor.component.updateSync();
+      expect(editor.screenRowForBufferRow(1)).toBeGreaterThan(1);
+      const view = lumine.views.getView(editor);
+      const firstLineTop = view.pixelPositionForBufferPosition([0, 0]).top;
+
+      extender.syncViewZones(new Map([[-1, 40]]));
+      editor.component.updateSync();
+
+      const zone = zoneAt(-1);
+      expect(extender.getViewZones().length).toBe(1);
+      expect(zone.marker.getStartBufferPosition().toArray()).toEqual([0, 0]);
+      expect(zone.decoration.getProperties().position).toBe("before");
+      expect(zone.element.isConnected).toBe(true);
+      expect(view.pixelPositionForBufferPosition([0, 0]).top).toBe(firstLineTop + 40);
+    });
+
+    it("keeps and resizes the leading zone in place", () => {
+      extender.syncViewZones(new Map([[-1, 20]]));
+      editor.component.updateSync();
+      const original = zoneAt(-1);
+      const originalElement = original.element;
+      const firstLineTop = lumine.views.getView(editor).pixelPositionForBufferPosition([0, 0]).top;
+
+      extender.syncViewZones(new Map([[-1, 20]]));
+      expect(zoneAt(-1)).toBe(original);
+      expect(zoneAt(-1).element).toBe(originalElement);
+
+      extender.syncViewZones(new Map([[-1, 55]]));
+      editor.component.updateSync();
+
+      expect(zoneAt(-1)).toBe(original);
+      expect(zoneAt(-1).element).toBe(originalElement);
+      expect(original.element.style.minHeight).toBe("55px");
+      expect(original.pixelHeight).toBe(55);
+      expect(original.marker.getStartBufferPosition().toArray()).toEqual([0, 0]);
+      expect(lumine.views.getView(editor).pixelPositionForBufferPosition([0, 0]).top).toBe(
+        firstLineTop + 35,
+      );
+    });
+
+    it("removes the leading zone while keeping a zone after the first line", () => {
+      extender.syncViewZones(
+        new Map([
+          [-1, 20],
+          [0, 40],
+        ]),
+      );
+      editor.component.updateSync();
+      const removed = zoneAt(-1);
+      const kept = zoneAt(0);
+
+      extender.syncViewZones(new Map([[0, 40]]));
+      editor.component.updateSync();
+
+      expect(extender.getViewZones().length).toBe(1);
+      expect(zoneAt(-1)).toBeUndefined();
+      expect(zoneAt(0)).toBe(kept);
+      expect(removed.marker.isDestroyed()).toBe(true);
+      expect(removed.element.isConnected).toBe(false);
+      expect(lumine.views.getView(editor).pixelPositionForBufferPosition([0, 0]).top).toBe(0);
+    });
+
+    it("ignores positions before the leading zone", () => {
+      expect(() => extender.syncViewZones(new Map([[-2, 20]]))).not.toThrow();
+      expect(extender.getViewZones().length).toBe(0);
+    });
+
     it("places a zone for each requested line", () => {
       extender.syncViewZones(
         new Map([

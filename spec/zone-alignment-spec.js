@@ -1,4 +1,5 @@
 const DiffView = require("../lib/diff-display");
+const { computeDiff } = require("../lib/compute-diff");
 
 describe("view zone alignment", () => {
   let editor1, editor2, diffView;
@@ -30,6 +31,63 @@ describe("view zone alignment", () => {
     const side2 =
       editor2.getScreenLineCount() * lineHeight + totalZoneHeight(diffView._editorDiffExtender2);
     expect(side1).toBe(side2);
+  }
+
+  function renderEditors() {
+    editor1.component.updateSync();
+    editor2.component.updateSync();
+  }
+
+  for (const longerSide of ["left", "right"]) {
+    for (const wrapped of [false, true]) {
+      it(`aligns common text after extra first lines on the ${longerSide}${wrapped ? " with a wrapped first common line" : ""}`, () => {
+        const common = [`!? Groups ${"group ".repeat(12)}`, "body", "end"].join("\n");
+        const longer = `SOFiSTiK 2023\n\n${common}`;
+        editor1.setText(longerSide === "left" ? longer : common);
+        editor2.setText(longerSide === "right" ? longer : common);
+        lumine.config.set("editor.softWrapAtPreferredLineLength", true);
+        lumine.config.set("editor.preferredLineLength", 20);
+        editor1.setSoftWrapped(wrapped);
+        editor2.setSoftWrapped(wrapped);
+        renderEditors();
+
+        diffView = new DiffView({ editor1, editor2 });
+        diffView._chunks = computeDiff(editor1.getText(), editor2.getText(), false, 0).chunks;
+        diffView._syncViewZoneHeights();
+        renderEditors();
+
+        const shorterExtender =
+          longerSide === "left" ? diffView._editorDiffExtender2 : diffView._editorDiffExtender1;
+        const zone = shorterExtender.getViewZones().find((z) => z.lineNumber === -1);
+        expect(zone).toBeDefined();
+        expect(zone.pixelHeight).toBe(2 * editor1.getLineHeightInPixels());
+        expect(zone.decoration.getProperties().position).toBe("before");
+        expect(zone.marker.getStartBufferPosition().toArray()).toEqual([0, 0]);
+        expect(zone.element.isConnected).toBe(true);
+
+        const row1 = longerSide === "left" ? 2 : 0;
+        const row2 = longerSide === "right" ? 2 : 0;
+        const view1 = lumine.views.getView(editor1);
+        const view2 = lumine.views.getView(editor2);
+        // Equal total heights do not prove placement: a spacer after the first
+        // line would balance the files while leaving their first common text apart.
+        for (const offset of [0, 1]) {
+          expect(view1.pixelPositionForBufferPosition([row1 + offset, 0]).top).toBeCloseTo(
+            view2.pixelPositionForBufferPosition([row2 + offset, 0]).top,
+            5,
+          );
+        }
+        if (wrapped) {
+          expect(
+            editor1.screenRowForBufferRow(row1 + 1) - editor1.screenRowForBufferRow(row1),
+          ).toBeGreaterThan(1);
+          expect(
+            editor2.screenRowForBufferRow(row2 + 1) - editor2.screenRowForBufferRow(row2),
+          ).toBeGreaterThan(1);
+        }
+        expectHeightsBalanced();
+      });
+    }
   }
 
   it("sums a line owed height by the wrap walk and by a chunk at once", () => {
