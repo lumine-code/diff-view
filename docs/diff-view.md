@@ -30,10 +30,38 @@ In your `package.json`:
 ```ts
 type DiffViewService = {
   getDiffView(): DiffState | null;
-  getMarkerLayers(): DisplayMarkerLayer[];
-  diffEditors(): TextEditor[];
+  getMarkerLayers(): Promise<DiffMarkerLayers | null>;
+  diffEditors(
+    editor1: TextEditor,
+    editor2: TextEditor,
+    options?: DiffOptions,
+  ): Promise<{ editor1: TextEditor; editor2: TextEditor } | null>;
   disable(): void;
-  onDidUpdate(callback: () => void): Disposable;
+  onDidUpdate(callback: (state: DiffState | null) => void): Disposable;
+};
+
+type DiffMarkerLayers = {
+  editor1?: EditorMarkerLayers;
+  editor2?: EditorMarkerLayers;
+};
+
+type EditorMarkerLayers = {
+  id: number;
+  lineMarkerLayer: DisplayMarkerLayer;
+  selectionMarkerLayer: DisplayMarkerLayer;
+  highlightType: "added" | "removed";
+};
+
+type DiffOptions = {
+  autoDiff?: boolean;
+  diffWords?: boolean;
+  ignoreWhitespace?: boolean;
+  computeTimeout?: number;
+  turnOffSoftWrap?: boolean;
+  muteNotifications?: boolean;
+  hideDocks?: boolean;
+  scrollSyncType?: "Vertical + Horizontal" | "Vertical" | "None";
+  addedColorSide?: "left" | "right";
 };
 
 type DiffState = {
@@ -44,13 +72,13 @@ type DiffState = {
 };
 ```
 
-| Member              | Description                                                    |
-| ------------------- | -------------------------------------------------------------- |
-| `getDiffView()`     | The current diff, or **`null` when no comparison is running**. |
-| `getMarkerLayers()` | The marker layers holding the diff decorations.                |
-| `diffEditors()`     | The editors taking part in the comparison.                     |
-| `disable()`         | Turns the comparison off.                                      |
-| `onDidUpdate(cb)`   | Fires when the diff is recomputed.                             |
+| Member              | Description                                                     |
+| ------------------- | --------------------------------------------------------------- |
+| `getDiffView()`     | The current diff, or **`null` when no comparison is running**.  |
+| `getMarkerLayers()` | Waits for the next comparison to publish its marker layers.     |
+| `diffEditors(a, b)` | Starts a comparison of the two editors and resolves when ready. |
+| `disable()`         | Turns comparison off and closes editors it created.             |
+| `onDidUpdate(cb)`   | Fires when the diff is recomputed.                              |
 
 ## Minimal example
 
@@ -89,6 +117,8 @@ module.exports = {
 **`addedColorSide` matters if you draw colours.** It says which side is being treated as the additions, and it flips when the user swaps the comparison; drawing added/removed without reading it produces a diff whose colours are inverted half the time.
 
 Chunks describe rows in the two editors' buffers. Re-read them after every `onDidUpdate` rather than holding them across edits.
+
+`diffEditors()` accepts existing editors and optional overrides for the listed settings. It resolves to the compared editors, or `null` when opening is cancelled or fails. `getMarkerLayers()` waits for the next comparison publication, rather than reading the current state; call it before starting a comparison when its layers are needed. Its object is keyed by `editor1` and `editor2`, and package deactivation resolves pending waiters with `null`.
 
 `onDidUpdate` fires on recomputation, which includes the comparison being torn down — so a callback should handle `getDiffView()` answering `null`.
 

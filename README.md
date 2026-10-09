@@ -26,8 +26,8 @@ Commands available in `lumine-workspace`:
 
 - `diff-view:enable`: start a diff between two panes,
 - `diff-view:toggle`: toggle diff on/off,
-- `diff-view:disable`: stop the current diff,
-- `diff-view:close`: stop diff and close the extra pane,
+- `diff-view:disable`: stop the current diff and close editors created for it,
+- `diff-view:close`: stop the current diff and leave both editors open,
 - `diff-view:next-diff`: jump to next difference,
 - `diff-view:prev-diff`: jump to previous difference,
 - `diff-view:copy-to-right`: copy current diff chunk to right editor,
