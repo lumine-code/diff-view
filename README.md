@@ -16,6 +16,8 @@ Compare files side-by-side with synchronized scrolling, soft-wrap support, git i
 - **Context menus**: right-click on tree-view files to "Diff with Active File".
 - **Scrollbar markers**: shows the diff chunks on the scrollbar and minimap via the marker hub.
 
+![Compare the current file with its committed version side by side.](.github/demo.png)
+
 ## Installation
 
 To install `diff-view` search for it in the Install pane of the Lumine settings, or run the command `lumine --install lumine-code/diff-view`.

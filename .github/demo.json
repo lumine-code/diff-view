@@ -1,0 +1,17 @@
+{
+  "title": "diff-view",
+  "description": "Compare the current file with its committed version side by side.",
+  "recordedOn": "2026-10-13",
+  "sourceRevision": "0d3cab12aad586d0f4ecb61777f3a5ca138f2173",
+  "mode": "normal",
+  "fontSettings": "default",
+  "themeSourceRevision": "6564a9e21899b5541e9c8f8006f9be6d6d72e6ad",
+  "images": [
+    {
+      "file": "demo.png",
+      "label": "Compare the current file with its committed version side by side.",
+      "width": 1200,
+      "height": 600
+    }
+  ]
+}
