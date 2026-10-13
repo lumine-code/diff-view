@@ -39,27 +39,6 @@
       {
         "type": "separator"
       }
-    ],
-    ".tab.texteditor": [
-      {
-        "type": "separator"
-      },
-      {
-        "label": "Diff with Active File",
-        "command": "diff-view:enable",
-        "after": ["tree-view:rename", "open-external:show"],
-        "afterGroupContaining": [
-          "pane:detach",
-          "pane:close",
-          "tabs:detach-tab",
-          "tabs:open-in-new-window",
-          "tabs:split-up",
-          "tabs:close-tab"
-        ]
-      },
-      {
-        "type": "separator"
-      }
     ]
   }
 }

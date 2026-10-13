@@ -13,7 +13,7 @@ Compare files side-by-side with synchronized scrolling, soft-wrap support, git i
 - **Soft-wrap support**: diff works correctly with soft wrap enabled, including proper line offsets and scroll synchronization.
 - **Buffer-based scroll sync**: uses buffer line positions for proper alignment across different soft-wrap settings.
 - **Quick toggle buttons**: footer buttons for soft-wrap toggle and equalizing pane widths.
-- **Context menus**: right-click on tree-view files or tabs to "Diff with Active File".
+- **Context menus**: right-click on tree-view files to "Diff with Active File".
 - **Scrollbar markers**: shows the diff chunks on the scrollbar and minimap via the marker hub.
 
 ## Installation
