@@ -8,7 +8,9 @@
           "submenu": [
             {
               "label": "Diff View",
-              "command": "diff-view:toggle"
+              "command": "diff-view:toggle",
+              "group": "panels",
+              "order": 10
             }
           ]
         }
