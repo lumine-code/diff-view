@@ -23,7 +23,7 @@
           "label": "Diff View",
           "submenu": [
             {
-              "label": "Toggle",
+              "label": "Toggle Diff View",
               "command": "diff-view:toggle"
             },
             {
@@ -35,7 +35,7 @@
               "command": "diff-view:git-head"
             },
             {
-              "label": "Diff with Git Commit",
+              "label": "Diff with Previous Git Commit",
               "command": "diff-view:git-commit"
             }
           ]
@@ -59,7 +59,9 @@
           "tree-view:paste",
           "tree-view:remove",
           "tree-view:add-file"
-        ]
+        ],
+        "group": "tools",
+        "order": 20
       },
       {
         "type": "separator"
