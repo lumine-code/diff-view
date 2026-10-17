@@ -178,3 +178,14 @@ body.diff-view-visible .lumine-dock-toggle-button.bottom {
     height: 5px;
   }
 }
+
+/* Respect reduced motion while retaining visible status indicators. */
+@media (prefers-reduced-motion: reduce) {
+  .diff-view-loading-icon::before,
+  .diff-view-loading-icon::after {
+    animation: none;
+  }
+  .diff-view-center-line {
+    transition: none;
+  }
+}
