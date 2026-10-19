@@ -56,7 +56,8 @@ lumine-text-editor {
 
 ## Services
 
-- [`diff-view`](docs/diff-view.md): provided to start, control, and inspect comparisons and their live marker layers.
+- [`diff-view`](docs/diff-view.md): provided to let other packages programmatically start, control, and inspect diffs — exposes `diffEditors(editor1, editor2, options)`, `getMarkerLayers()`, and `disable()`.
+- [`diff-view`](docs/diff-view.md): provided to scrollbar-marker consumers — exposes `getDiffView()` with the current diff chunks and editors, plus an `onDidUpdate(callback)` subscription.
 - `marker.layer`: provided to draw the diff chunks on the editor's overview maps (scrollbar, minimap).
 
 ## Contributing

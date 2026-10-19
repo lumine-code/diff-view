@@ -1,6 +1,6 @@
 # diff-view
 
-Reports the current comparison and its live marker layers.
+Reports the current diff: its chunks, the two editors being compared, and which side is coloured as added.
 
 |             |                                                         |
 | ----------- | ------------------------------------------------------- |
@@ -30,6 +30,7 @@ In your `package.json`:
 ```ts
 type DiffViewService = {
   getDiffView(): DiffState | null;
+  getMarkerLayers(): Promise<DiffMarkerLayers | null>;
   diffEditors(
     editor1: TextEditor,
     editor2: TextEditor,
@@ -68,13 +69,13 @@ type DiffState = {
   editor1: TextEditor | undefined;
   editor2: TextEditor | undefined;
   addedColorSide: "left" | "right";
-  markerLayers: DiffMarkerLayers;
 };
 ```
 
 | Member              | Description                                                     |
 | ------------------- | --------------------------------------------------------------- |
 | `getDiffView()`     | The current diff, or **`null` when no comparison is running**.  |
+| `getMarkerLayers()` | Waits for the next comparison to publish its marker layers.     |
 | `diffEditors(a, b)` | Starts a comparison of the two editors and resolves when ready. |
 | `disable()`         | Turns comparison off and closes editors it created.             |
 | `onDidUpdate(cb)`   | Fires when the diff is recomputed.                              |
@@ -98,16 +99,11 @@ module.exports = {
     return disposables;
   },
 
-  rangesFor(editor) {
+  chunksFor(editor) {
     const state = this.diffView?.getDiffView();
     if (!state) return [];
-    const side =
-      editor === state.editor1
-        ? state.markerLayers.editor1
-        : editor === state.editor2
-          ? state.markerLayers.editor2
-          : null;
-    return side?.lineMarkerLayer.getMarkers().map((marker) => marker.getBufferRange()) ?? [];
+    if (editor !== state.editor1 && editor !== state.editor2) return [];
+    return state.chunks;
   },
 };
 ```
@@ -122,13 +118,11 @@ module.exports = {
 
 Chunks describe rows in the two editors' buffers. Re-read them after every `onDidUpdate` rather than holding them across edits.
 
-`getDiffView().markerLayers` synchronously returns the current owned marker layers. Its line markers track buffer edits immediately, while chunk coordinates describe the last completed comparison. Consumers project the live line marker ranges during continuous editing without requesting a new comparison. A line range ending at column zero excludes its final buffer row. Re-read the snapshot after `onDidUpdate`, and stop using its layers when the comparison or service disappears.
-
-`diffEditors()` accepts existing editors and optional overrides for the listed settings. It resolves to the compared editors, or `null` when opening is cancelled or fails. Read `getDiffView().markerLayers` after it resolves to inspect the ready comparison. The marker-layer snapshot is keyed by `editor1` and `editor2`.
+`diffEditors()` accepts existing editors and optional overrides for the listed settings. It resolves to the compared editors, or `null` when opening is cancelled or fails. `getMarkerLayers()` waits for the next comparison publication, rather than reading the current state; call it before starting a comparison when its layers are needed. Its object is keyed by `editor1` and `editor2`, and package deactivation resolves pending waiters with `null`.
 
 `onDidUpdate` fires on recomputation, which includes the comparison being torn down — so a callback should handle `getDiffView()` answering `null`.
 
-**An update can also carry no chunks for a comparison that is still running.** The diff is computed in the window under the Compute Timeout budget, and a pair that differs almost everywhere can exhaust it; the update then reports empty chunks and marker layers so consumers clear what they drew.
+**An update can also carry no chunks for a comparison that is still running.** The diff is computed in the window under the Compute Timeout budget, and a pair that differs almost everywhere can exhaust it; the update then reports empty chunks so consumers clear what they drew, and `getMarkerLayers()` resolves with the emptied layers rather than never settling.
 
 ## Teardown
 
