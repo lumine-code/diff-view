@@ -67,7 +67,7 @@ describe("diff-view marker layer", () => {
     expect(lumine.packages.isPackageActive("diff-view")).toBe(true);
     expect(provider.name).toBe("diff-view");
     expect(typeof provider.description).toBe("string");
-    expect(provider.timer).toBe(100);
+    expect(provider.timer).toBeUndefined();
     expect(provider.merge).toBe(true);
     expect(provider.enabled).toBe("diff-view.marker.enabled");
     expect(provider.threshold).toBe("diff-view.marker.threshold");
@@ -137,6 +137,20 @@ describe("diff-view marker layer", () => {
     const late = makeLayer(editor3);
     late.updateSync();
     expect(late.items).toEqual([{ row: 2, end: 3, cls: "removed" }]);
+  });
+
+  it("keeps the current diff when its marker layer detaches and reattaches", () => {
+    service.emitter.emit("did-update-diff", {
+      chunks: [{ oldLineStart: 2, oldLineEnd: 4, newLineStart: 2, newLineEnd: 3 }],
+      editor1,
+      editor2,
+    });
+    layer1.disposables.dispose();
+
+    const replacement = makeLayer(editor1);
+    replacement.updateSync();
+
+    expect(replacement.items).toEqual([{ row: 2, end: 3, cls: "added" }]);
   });
 
   it("covers every screen row of a chunk whose lines wrap", () => {
