@@ -2,6 +2,7 @@ const { CompositeDisposable, Emitter } = require("lumine");
 
 describe("diff-view marker layer", () => {
   let editor1, editor2, mainModule, provider, layer1, layer2, layers, service, consumerDisposable;
+  let sourceLayers;
 
   // Minimal stand-in for the layer object a renderer's host passes to
   // `initialize` and `getItems` (see lib/layer.js in the marker package).
@@ -25,15 +26,58 @@ describe("diff-view marker layer", () => {
     return fake;
   }
 
-  // Fake service mirroring the object returned by provideDiffView():
-  // onDidUpdate callbacks receive { chunks, editor1, editor2, addedColorSide }
-  // or null.
+  // Build native source markers from the fixture's chunk coordinates, just as
+  // the diff display does. The adapter receives only the resulting snapshot.
+  function makeState(data) {
+    if (!data) return null;
+    const makeSource = (editor, startKey, endKey, highlightType) => {
+      const lineMarkerLayer = editor.addMarkerLayer();
+      const selectionMarkerLayer = editor.addMarkerLayer();
+      sourceLayers.push(lineMarkerLayer, selectionMarkerLayer);
+      for (const chunk of data.chunks) {
+        if (chunk[startKey] !== chunk[endKey]) {
+          lineMarkerLayer.markBufferRange(
+            [
+              [chunk[startKey], 0],
+              [chunk[endKey], 0],
+            ],
+            { invalidate: "never" },
+          );
+        }
+      }
+      return { id: editor.id, lineMarkerLayer, selectionMarkerLayer, highlightType };
+    };
+    const addedOnRight = data.addedColorSide === "right";
+    return {
+      ...data,
+      markerLayers: {
+        editor1: makeSource(
+          data.editor1,
+          "oldLineStart",
+          "oldLineEnd",
+          addedOnRight ? "removed" : "added",
+        ),
+        editor2: makeSource(
+          data.editor2,
+          "newLineStart",
+          "newLineEnd",
+          addedOnRight ? "added" : "removed",
+        ),
+      },
+    };
+  }
+
   function makeFakeService() {
     const emitter = new Emitter();
+    let current = null;
     return {
-      emitter,
-      getDiffView: () => null,
+      getDiffView: () => current,
       onDidUpdate: (callback) => emitter.on("did-update-diff", callback),
+      publish(data) {
+        current = makeState(data);
+        emitter.emit("did-update-diff", current);
+        return current;
+      },
     };
   }
 
@@ -46,6 +90,7 @@ describe("diff-view marker layer", () => {
     mainModule.markerLayerConnection.dispose();
     provider = mainModule.provideMarkerLayer();
     layers = [];
+    sourceLayers = [];
     editor1 = await lumine.workspace.open();
     editor1.setText(Array(50).fill("old text").join("\n"));
     editor2 = await lumine.workspace.open();
@@ -61,6 +106,7 @@ describe("diff-view marker layer", () => {
     for (const layer of layers) {
       layer.disposables.dispose();
     }
+    for (const sourceLayer of sourceLayers) sourceLayer.destroy();
   });
 
   it("activates and provides a marker layer descriptor", () => {
@@ -76,7 +122,7 @@ describe("diff-view marker layer", () => {
   });
 
   it("marks the chunks of both diff editors with added and removed classes", () => {
-    service.emitter.emit("did-update-diff", {
+    service.publish({
       chunks: [{ oldLineStart: 2, oldLineEnd: 4, newLineStart: 2, newLineEnd: 3 }],
       editor1,
       editor2,
@@ -86,7 +132,7 @@ describe("diff-view marker layer", () => {
   });
 
   it("swaps the classes when the diff puts the added color on the right", () => {
-    service.emitter.emit("did-update-diff", {
+    service.publish({
       chunks: [{ oldLineStart: 2, oldLineEnd: 4, newLineStart: 2, newLineEnd: 3 }],
       editor1,
       editor2,
@@ -98,7 +144,7 @@ describe("diff-view marker layer", () => {
 
   it("skips one-sided chunks on the editor they cover no lines of", () => {
     // A pure insertion: no rows in the old file, two rows in the new one.
-    service.emitter.emit("did-update-diff", {
+    service.publish({
       chunks: [{ oldLineStart: 5, oldLineEnd: 5, newLineStart: 5, newLineEnd: 7 }],
       editor1,
       editor2,
@@ -108,7 +154,7 @@ describe("diff-view marker layer", () => {
   });
 
   it("returns one raw item per two-sided chunk and leaves merging to the host", () => {
-    service.emitter.emit("did-update-diff", {
+    service.publish({
       chunks: [
         { oldLineStart: 2, oldLineEnd: 4, newLineStart: 2, newLineEnd: 4 },
         { oldLineStart: 4, oldLineEnd: 7, newLineStart: 4, newLineEnd: 7 },
@@ -128,7 +174,7 @@ describe("diff-view marker layer", () => {
     // next update.
     const editor3 = await lumine.workspace.open();
     editor3.setText(Array(50).fill("new text").join("\n"));
-    service.emitter.emit("did-update-diff", {
+    service.publish({
       chunks: [{ oldLineStart: 2, oldLineEnd: 4, newLineStart: 2, newLineEnd: 4 }],
       editor1,
       editor2: editor3,
@@ -140,7 +186,7 @@ describe("diff-view marker layer", () => {
   });
 
   it("keeps the current diff when its marker layer detaches and reattaches", () => {
-    service.emitter.emit("did-update-diff", {
+    service.publish({
       chunks: [{ oldLineStart: 2, oldLineEnd: 4, newLineStart: 2, newLineEnd: 3 }],
       editor1,
       editor2,
@@ -153,6 +199,51 @@ describe("diff-view marker layer", () => {
     expect(replacement.items).toEqual([{ row: 2, end: 3, cls: "added" }]);
   });
 
+  it("seeds the current comparison when the diff service reconnects", () => {
+    const data = {
+      chunks: [{ oldLineStart: 2, oldLineEnd: 4, newLineStart: 2, newLineEnd: 3 }],
+      editor1,
+      editor2,
+    };
+    consumerDisposable.dispose();
+    service.publish(data);
+
+    consumerDisposable = mainModule.markerLayer.connect(service);
+
+    expect(layer1.items).toEqual([{ row: 2, end: 3, cls: "added" }]);
+    expect(layer2.items).toEqual([{ row: 2, end: 2, cls: "removed" }]);
+  });
+
+  it("ignores old callbacks and cleanup when reconnecting to the same service", () => {
+    consumerDisposable.dispose();
+    const callbacks = [];
+    const onDidUpdate = service.onDidUpdate;
+    spyOn(service, "onDidUpdate").and.callFake((callback) => {
+      callbacks.push(callback);
+      return onDidUpdate(callback);
+    });
+    const previous = mainModule.markerLayer.connect(service);
+    consumerDisposable = mainModule.markerLayer.connect(service);
+    const data = {
+      chunks: [{ oldLineStart: 2, oldLineEnd: 4, newLineStart: 2, newLineEnd: 3 }],
+      editor1,
+      editor2,
+    };
+    const state = service.publish(data);
+    layer1.updateSync.calls.reset();
+
+    callbacks[0](null);
+    previous.dispose();
+
+    expect(layer1.updateSync).not.toHaveBeenCalled();
+    expect(layer1.items).toEqual([{ row: 2, end: 3, cls: "added" }]);
+    consumerDisposable.dispose();
+    layer1.updateSync.calls.reset();
+    callbacks[1](state);
+    expect(layer1.updateSync).not.toHaveBeenCalled();
+    expect(layer1.items).toEqual([]);
+  });
+
   it("covers every screen row of a chunk whose lines wrap", () => {
     // Screen rows, not buffer rows: a marker that ended at the first screen row
     // of the chunk's last line covered a fraction of what the chunk spans.
@@ -160,7 +251,7 @@ describe("diff-view marker layer", () => {
     editor1.setSoftWrapped(true);
     editor1.displayLayer.reset({ softWrapColumn: 20 });
 
-    service.emitter.emit("did-update-diff", {
+    service.publish({
       chunks: [{ oldLineStart: 2, oldLineEnd: 4, newLineStart: 2, newLineEnd: 4 }],
       editor1,
       editor2,
@@ -175,7 +266,7 @@ describe("diff-view marker layer", () => {
 
   it("marks the last chunk of the file without running past the end", () => {
     const lastRow = editor1.getLastBufferRow();
-    service.emitter.emit("did-update-diff", {
+    service.publish({
       chunks: [
         {
           oldLineStart: lastRow,
@@ -197,8 +288,8 @@ describe("diff-view marker layer", () => {
     ]);
   });
 
-  it("keeps the previous items when an edit has outdated the chunks", () => {
-    service.emitter.emit("did-update-diff", {
+  it("projects the live clipped source range after the buffer shrinks", () => {
+    service.publish({
       chunks: [{ oldLineStart: 40, oldLineEnd: 42, newLineStart: 40, newLineEnd: 42 }],
       editor1,
       editor2,
@@ -206,17 +297,29 @@ describe("diff-view marker layer", () => {
     const before = layer1.items;
     expect(before.length).toBe(1);
 
-    // The buffer shrinks below the chunk before the next diff lands. Rows past
-    // the end clip to the last line, which would pile every marker at the
-    // bottom of the map, so the layer holds what it had.
-    editor1.setText("one line\n");
+    // Follow the same anchor as the source decoration before another
+    // comparison has supplied new markers.
+    editor1.getBuffer().delete([[1, 0], editor1.getBuffer().getEndPosition()]);
     layer1.updateSync();
 
-    expect(layer1.items).toBe(before);
+    expect(layer1.items).toEqual([{ row: 1, end: 1, cls: "added" }]);
+  });
+
+  it("clears its items when the source marker layer is destroyed", () => {
+    service.publish({
+      chunks: [{ oldLineStart: 2, oldLineEnd: 4, newLineStart: 2, newLineEnd: 3 }],
+      editor1,
+      editor2,
+    });
+    service.getDiffView().markerLayers.editor1.lineMarkerLayer.destroy();
+
+    layer1.updateSync();
+
+    expect(layer1.items).toEqual([]);
   });
 
   it("clears the previous editors when the diff view is closed", () => {
-    service.emitter.emit("did-update-diff", {
+    service.publish({
       chunks: [{ oldLineStart: 2, oldLineEnd: 4, newLineStart: 2, newLineEnd: 4 }],
       editor1,
       editor2,
@@ -224,13 +327,13 @@ describe("diff-view marker layer", () => {
     expect(layer1.items.length).toBe(1);
     expect(layer2.items.length).toBe(1);
 
-    service.emitter.emit("did-update-diff", null);
+    service.publish(null);
     expect(layer1.items).toEqual([]);
     expect(layer2.items).toEqual([]);
   });
 
   it("clears the layers when the consumer is disposed", () => {
-    service.emitter.emit("did-update-diff", {
+    service.publish({
       chunks: [{ oldLineStart: 2, oldLineEnd: 4, newLineStart: 2, newLineEnd: 4 }],
       editor1,
       editor2,
@@ -243,7 +346,7 @@ describe("diff-view marker layer", () => {
     expect(mainModule.markerLayer.diffService).toBeNull();
 
     layer1.updateSync.calls.reset();
-    service.emitter.emit("did-update-diff", {
+    service.publish({
       chunks: [{ oldLineStart: 2, oldLineEnd: 4, newLineStart: 2, newLineEnd: 4 }],
       editor1,
       editor2,

@@ -832,14 +832,13 @@ describe("diff-view", () => {
   describe("provided services", () => {
     it("provides the diff-view control service", async () => {
       const service = mainModule.provideDiffView();
-      expect(typeof service.getMarkerLayers).toBe("function");
+      expect(typeof service.getDiffView).toBe("function");
       expect(typeof service.diffEditors).toBe("function");
       expect(typeof service.disable).toBe("function");
 
       const { editor1, editor2 } = await openEditorsSideBySide("x\ny\n", "x\nz\n");
-      const layersPromise = service.getMarkerLayers();
-      service.diffEditors(editor1, editor2, { autoDiff: false, muteNotifications: true });
-      const layers = await layersPromise;
+      await service.diffEditors(editor1, editor2, { autoDiff: false, muteNotifications: true });
+      const layers = service.getDiffView().markerLayers;
       expect(layers.editor1.lineMarkerLayer).toBeDefined();
       expect(layers.editor2.lineMarkerLayer).toBeDefined();
       expect(layers.editor1.id).toBe(editor1.id);
