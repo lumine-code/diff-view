@@ -4,6 +4,8 @@ describe("word highlights", () => {
   let editor2;
 
   beforeEach(async () => {
+    const text = await lumine.packages.activatePackage("language-text");
+    await text.resourceLoadPromise;
     jasmine.attachToDOM(lumine.views.getView(lumine.workspace));
     const pkg = await lumine.packages.activatePackage("diff-view");
     mainModule = pkg.mainModule;
@@ -13,6 +15,8 @@ describe("word highlights", () => {
     lumine.workspace.getActivePane().splitRight();
     editor2 = await lumine.workspace.open();
     editor2.setText("prefix new suffix\n");
+    const grammar = lumine.grammars.grammarForScopeName("text.plain");
+    for (const editor of [editor1, editor2]) lumine.grammars.assignGrammar(editor, grammar);
   });
 
   afterEach(() => {
