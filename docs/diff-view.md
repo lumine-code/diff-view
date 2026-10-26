@@ -118,6 +118,8 @@ module.exports = {
 
 Chunks describe rows in the two editors' buffers. Re-read them after every `onDidUpdate` rather than holding them across edits.
 
+`getDiffView().grouped` is true when detailed alignment exceeded its bounded refinement budget. Its larger chunks still cover every change, and copying uses the complete original snapshot ranges. Consumers may label this coarser presentation rather than interpreting each highlighted line as an independently changed line. Large comparisons are cooperative and revision-bound; a new comparison cancels obsolete publication. Large copy operations prepare source edits and publish atomically in one undo step.
+
 Automatic recomputation pauses and clears chunks and synchronized scrolling while either editor uses None. It resumes with current source when both return to a real grammar and Auto Diff is enabled. Explicit `diffEditors()` comparisons remain available with None.
 
 `diffEditors()` accepts existing editors and optional overrides for the listed settings. It resolves to the compared editors, or `null` when opening is cancelled or fails. `getMarkerLayers()` waits for the next comparison publication, rather than reading the current state; call it before starting a comparison when its layers are needed. Its object is keyed by `editor1` and `editor2`, and package deactivation resolves pending waiters with `null`.

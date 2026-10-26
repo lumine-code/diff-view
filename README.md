@@ -4,6 +4,8 @@ A split pane diff tool.
 
 Compare files side-by-side with synchronized scrolling, soft-wrap support, git integration, and context menus.
 
+Large comparisons use immutable text snapshots and yield during normalization and comparison. Shared prefixes and suffixes narrow detailed comparison to the changed region. When that region exceeds the detail budget, the footer explicitly labels a grouped difference covering all changed text; copying the group remains exact and undoable. Word detail is omitted for grouped regions and lines longer than 65,536 UTF-16 units. EOL style and trailing newline differences remain ignored, and Ignore Whitespace retains line-trimming semantics. Superseded comparisons stop before publishing results. Copy preserves the source fragment's line endings without converting it into a single string.
+
 ## Features
 
 - **Side-by-side diff**: highlights added, removed, and changed lines in two editors.
