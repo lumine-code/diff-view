@@ -35,6 +35,28 @@ describe("diff-view", () => {
     mainModule.disable();
   });
 
+  it("exposes the whitespace option and disables it when the comparison overrides it", () => {
+    lumine.config.set("diff-view.ignoreWhitespace", false);
+    mainModule.options = {};
+    const state = () =>
+      lumine.commands.getCommandState("diff-view:set-ignore-whitespace", {
+        target: workspaceElement,
+      });
+    expect(state()).toEqual({ type: "checkbox", checked: false });
+    expect(lumine.commands.canDispatch(workspaceElement, "diff-view:set-ignore-whitespace")).toBe(
+      true,
+    );
+    mainModule.options = { ignoreWhitespace: true };
+    expect(state()).toEqual({ type: "checkbox", checked: true });
+    expect(lumine.commands.canDispatch(workspaceElement, "diff-view:set-ignore-whitespace")).toBe(
+      false,
+    );
+    expect(
+      lumine.commands.getCommandState("diff-view:toggle", { target: workspaceElement }),
+    ).toBeNull();
+    mainModule.options = {};
+  });
+
   async function openEditorsSideBySide(text1, text2) {
     const editor1 = await lumine.workspace.open();
     editor1.setText(text1);
