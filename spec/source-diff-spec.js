@@ -94,6 +94,34 @@ describe("Large source comparison integration", () => {
     right.destroy();
   });
 
+  it("copies many independent hunks through custom trackers with one undo", async () => {
+    const original = "old\nsame\n".repeat(129);
+    const expected = "new\nsame\n".repeat(129);
+    left.setText(expected);
+    right.setText(original);
+    await main.diffEditors(left, right, { autoDiff: false, muteNotifications: true });
+    expect(main.diffView._chunks.length).toBe(129);
+    for (const chunk of main.diffView._chunks) chunk.isSelected = true;
+    const buffer = right.getBuffer();
+    let calls = 0;
+    const layer = buffer.addMarkerLayer({
+      trackRanges(entries) {
+        calls++;
+        return entries.map(({ id }) => ({ id, range: buffer.getRange() }));
+      },
+    });
+    layer.markRange(buffer.getRange(), { invalidate: "never" });
+    const errors = spyOn(lumine.notifications, "addError");
+    buffer.clearUndoStack();
+    await main.copyToRight();
+    expect(right.getText()).toBe(expected);
+    expect(calls).toBe(129);
+    expect(errors).not.toHaveBeenCalled();
+    right.undo();
+    expect(right.getText()).toBe(original);
+    expect(buffer.undo()).toBe(false);
+  });
+
   it("copies a grouped snapshot and undoes it without whole-document or selected-range strings", async () => {
     let text = source("x".repeat(65536));
     for (let i = 0; i < 14; i++) text = text.replace(text.length, text.length, text);
