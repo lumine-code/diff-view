@@ -45,8 +45,7 @@ describe("view zone alignment", () => {
         const longer = `SOFiSTiK 2023\n\n${common}`;
         editor1.setText(longerSide === "left" ? longer : common);
         editor2.setText(longerSide === "right" ? longer : common);
-        lumine.config.set("editor.softWrapAtPreferredLineLength", true);
-        lumine.config.set("editor.preferredLineLength", 20);
+        lumine.config.set("editor.softWrapMaxColumn", 20);
         editor1.setSoftWrapped(wrapped);
         editor2.setSoftWrapped(wrapped);
         renderEditors();
@@ -161,5 +160,30 @@ describe("view zone alignment", () => {
     // for a frame and let each editor re-anchor onto a different row.
     const zoneAfter = diffView._editorDiffExtender2.getViewZones().find((z) => z.lineNumber === 2);
     expect(zoneAfter).toBe(zoneBefore);
+  });
+
+  it("rebalances automatically when wrap bounds change without a viewport resize", async () => {
+    jasmine.useRealClock();
+    const lines = Array.from({ length: 10 }, (_, i) => `line ${i} ${"x".repeat(70)}`);
+    editor1.setText(lines.join("\n"));
+    const shorter = lines.slice();
+    shorter.splice(3, 2);
+    editor2.setText(shorter.join("\n"));
+    await editor1.update({ softWrapped: true, softWrapMinColumn: 100, softWrapMaxColumn: 100 });
+    editor2.setSoftWrapped(false);
+
+    diffView = new DiffView({ editor1, editor2 });
+    diffView._chunks = [{ oldLineStart: 3, oldLineEnd: 5, newLineStart: 3, newLineEnd: 3 }];
+    diffView._syncViewZoneHeights();
+    const heightBefore = totalZoneHeight(diffView._editorDiffExtender2);
+    expectHeightsBalanced();
+
+    await editor1.update({ softWrapMinColumn: 20, softWrapMaxColumn: 20 });
+    await conditionPromise(
+      () => totalZoneHeight(diffView._editorDiffExtender2) > heightBefore,
+      "the diff alignment to follow the effective wrapping column",
+    );
+
+    expectHeightsBalanced();
   });
 });

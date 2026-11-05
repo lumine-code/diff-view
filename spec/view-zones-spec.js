@@ -21,8 +21,7 @@ describe("view zones", () => {
   describe("syncViewZones", () => {
     it("places a leading zone before the first screen row of a wrapped line", () => {
       editor.setText(`${"group ".repeat(12)}\nbody\nend`);
-      lumine.config.set("editor.softWrapAtPreferredLineLength", true);
-      lumine.config.set("editor.preferredLineLength", 20);
+      lumine.config.set("editor.softWrapMaxColumn", 20);
       editor.setSoftWrapped(true);
       editor.component.updateSync();
       expect(editor.screenRowForBufferRow(1)).toBeGreaterThan(1);
