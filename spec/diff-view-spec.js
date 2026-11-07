@@ -788,7 +788,7 @@ describe("diff-view", () => {
       expect(() => mainModule.diffView._syncViewZoneHeights()).not.toThrow();
     });
 
-    it("leaves the existing view zones alone until the diff catches up", async () => {
+    it("removes obsolete view zones until a fresh comparison catches up", async () => {
       const { editor1, editor2 } = await openEditorsSideBySide(
         Array.from({ length: 60 }, (_, i) => `line ${i}`).join("\n"),
         Array.from({ length: 50 }, (_, i) => `line ${i}`).join("\n"),
@@ -799,14 +799,22 @@ describe("diff-view", () => {
         () => mainModule.diffView != null && mainModule.diffView.getNumDifferences() > 0,
       );
       await new Promise((resolve) => requestAnimationFrame(resolve));
-      const zonesBefore = mainModule.diffView._editorDiffExtender2.getViewZones().length;
+      const extender = mainModule.diffView._editorDiffExtender2;
+      const zonesBefore = extender.getViewZones().slice();
+      expect(zonesBefore.length).toBeGreaterThan(0);
 
       editor2.setText("one line\n");
       mainModule.diffView._syncViewZoneHeights();
 
       // Recomputing against stale chunks would place spacers at the wrong rows,
-      // so the current ones stay until the diff already on its way lands.
-      expect(mainModule.diffView._editorDiffExtender2.getViewZones().length).toBe(zonesBefore);
+      // and retaining their old spacers would misalign the edited document too.
+      expect(zonesBefore.every((zone) => zone.marker.isDestroyed())).toBe(true);
+      expect(extender.getViewZones()).toEqual([]);
+
+      mainModule.updateDiff({ editor1, editor2 });
+      mainModule.diffView._syncViewZoneHeights();
+      expect(extender.getViewZones().length).toBeGreaterThan(0);
+      expect(extender.getViewZones().every((zone) => !zonesBefore.includes(zone))).toBe(true);
     });
   });
 

@@ -38,6 +38,80 @@ describe("view zone alignment", () => {
     editor2.component.updateSync();
   }
 
+  for (const editedSide of ["left", "right"]) {
+    it(`removes stale spacers after a same-line-count edit on the ${editedSide} until a fresh comparison`, () => {
+      editor1.setText("common\nextra\nend");
+      editor2.setText("common\nend");
+      diffView = new DiffView({ editor1, editor2 });
+      const compare = () => {
+        diffView.displayDiff(
+          computeDiff(editor1.getText(), editor2.getText(), false, 0),
+          "left",
+          false,
+          false,
+        );
+        diffView._syncViewZoneHeights();
+      };
+      compare();
+      const oldZones = diffView._editorDiffExtender2.getViewZones().slice();
+      expect(oldZones.length).toBe(1);
+      expectHeightsBalanced();
+
+      const edited = editedSide === "left" ? editor1 : editor2;
+      const lineCount = edited.getLineCount();
+      edited.setTextInBufferRange(
+        [
+          [0, 0],
+          [0, 6],
+        ],
+        "changed",
+      );
+      expect(edited.getLineCount()).toBe(lineCount);
+      expect(oldZones.every((zone) => zone.marker.isDestroyed())).toBe(true);
+      expect(diffView._editorDiffExtender1.getViewZones()).toEqual([]);
+      expect(diffView._editorDiffExtender2.getViewZones()).toEqual([]);
+
+      // A queued layout callback must not recreate spacers from chunks whose
+      // line numbers still fit, but whose source text is no longer current.
+      diffView._syncViewZoneHeights();
+      expect(diffView._editorDiffExtender1.getViewZones()).toEqual([]);
+      expect(diffView._editorDiffExtender2.getViewZones()).toEqual([]);
+
+      diffView.clearDiff();
+      compare();
+      expect(diffView._editorDiffExtender2.getViewZones().length).toBe(1);
+      expectHeightsBalanced();
+    });
+  }
+
+  for (const emptySide of ["left", "right"]) {
+    it(`balances an empty ${emptySide} editor against a wrapped final line`, () => {
+      const text = `first\n${"wrapped ".repeat(12)}`;
+      editor1.setText(emptySide === "left" ? "" : text);
+      editor2.setText(emptySide === "right" ? "" : text);
+      lumine.config.set("editor.softWrapMaxColumn", 20);
+      editor1.setSoftWrapped(true);
+      editor2.setSoftWrapped(true);
+      renderEditors();
+
+      diffView = new DiffView({ editor1, editor2 });
+      diffView.displayDiff(
+        computeDiff(editor1.getText(), editor2.getText(), false, 0),
+        "left",
+        false,
+        false,
+      );
+      diffView._syncViewZoneHeights();
+      renderEditors();
+
+      const empty = emptySide === "left" ? editor1 : editor2;
+      const populated = emptySide === "left" ? editor2 : editor1;
+      expect(empty.getLineCount()).toBe(1);
+      expect(populated.getScreenLineCount()).toBeGreaterThan(populated.getLineCount());
+      expectHeightsBalanced();
+    });
+  }
+
   for (const longerSide of ["left", "right"]) {
     for (const wrapped of [false, true]) {
       it(`aligns common text after extra first lines on the ${longerSide}${wrapped ? " with a wrapped first common line" : ""}`, () => {
