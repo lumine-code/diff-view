@@ -94,6 +94,76 @@ describe("Large source comparison integration", () => {
     right.destroy();
   });
 
+  const compareInBackground = () =>
+    main.diffEditors(left, right, {
+      autoDiff: false,
+      muteNotifications: true,
+      computeTimeout: 0,
+      diffWords: false,
+      ignoreWhitespace: true,
+      scrollSyncType: "None",
+    });
+
+  function differentText(prefix) {
+    return Array.from({ length: 200 }, (_, index) => `${prefix} ${index}\n`).join("");
+  }
+
+  it("keeps the renderer available during an exact comparison of small, mostly different files", async () => {
+    const leftText = differentText("before") + "  anchor\r\n" + differentText("old");
+    const rightText = differentText("after") + "anchor\n" + differentText("new");
+    left.setText(leftText);
+    right.setText(rightText);
+
+    let workerStarted;
+    const started = new Promise((resolve) => (workerStarted = resolve));
+    const compute = main._requestWorkerComparison.bind(main);
+    const worker = spyOn(main, "_requestWorkerComparison").and.callFake((...args) => {
+      const result = compute(...args);
+      workerStarted();
+      return result;
+    });
+    const comparison = compareInBackground();
+    await Promise.race([started, comparison]);
+    await new Promise(setImmediate);
+    expect(worker).toHaveBeenCalledTimes(1);
+    expect(main.diffView.getNumDifferences()).toBe(0);
+
+    expect(await comparison).not.toBeNull();
+    const coordinates = ({ oldLineStart, oldLineEnd, newLineStart, newLineEnd }) => ({
+      oldLineStart,
+      oldLineEnd,
+      newLineStart,
+      newLineEnd,
+    });
+    expect(main.diffView._chunks.map(coordinates)).toEqual([
+      { oldLineStart: 0, oldLineEnd: 200, newLineStart: 0, newLineEnd: 200 },
+      { oldLineStart: 201, oldLineEnd: 401, newLineStart: 201, newLineEnd: 401 },
+    ]);
+  });
+
+  it("stops obsolete worker work on an edit and publishes only a fresh comparison", async () => {
+    left.setText(differentText("before"));
+    right.setText(differentText("after"));
+    let workerStarted;
+    const started = new Promise((resolve) => (workerStarted = resolve));
+    const compute = main._requestWorkerComparison.bind(main);
+    const worker = spyOn(main, "_requestWorkerComparison").and.callFake((...args) => {
+      const result = compute(...args);
+      workerStarted(main.comparisonWorker);
+      return result;
+    });
+    const comparison = compareInBackground();
+    const obsoleteWorker = await Promise.race([started, comparison.then(() => null)]);
+    expect(obsoleteWorker).not.toBeNull();
+    right.setText(left.getText().replace("before 0", "fresh"));
+    expect(obsoleteWorker?.closed).toBe(true);
+    await comparison;
+    expect(main.diffView.getNumDifferences()).toBe(0);
+    await compareInBackground();
+    expect(main.diffView.getNumDifferences()).toBe(1);
+    expect(worker).toHaveBeenCalledTimes(1);
+  });
+
   it("copies many independent hunks through custom trackers with one undo", async () => {
     const original = "old\nsame\n".repeat(129);
     const expected = "new\nsame\n".repeat(129);

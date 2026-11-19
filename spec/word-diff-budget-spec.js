@@ -91,4 +91,36 @@ describe("the shared line and word diff budget", () => {
     expect(words.calls.allArgs().map((args) => args[2])).toEqual([0, 0, 0]);
     expectLineHighlights();
   });
+
+  it("publishes the line comparison before computing detailed changes to a hard word pair", async () => {
+    jasmine.useRealClock();
+    const left = Array.from({ length: 430 }, (_, i) => `before${i}`).join(" ");
+    const right = Array.from({ length: 430 }, (_, i) => `after${i}`).join("\t");
+    editor1.setText(`${left} shared`);
+    editor2.setText(`${right} shared`);
+    const words = spyOn(wordDiffModule, "computeWordDiff").and.callThrough();
+    const request = mainModule._requestWorkerComparison.bind(mainModule);
+    const compareInWorker = spyOn(mainModule, "_requestWorkerComparison").and.callFake(
+      (job, signal) => {
+        expect(mainModule.diffView.getNumDifferences()).toBe(1);
+        return request(job, signal);
+      },
+    );
+    const wordHighlights = (editor) =>
+      editor
+        .getDecorations({ type: "highlight" })
+        .filter((decoration) => /diff-view-word-/.test(decoration.getProperties().class));
+
+    await mainModule.diffEditors(editor1, editor2, {
+      autoDiff: false,
+      computeTimeout: 0,
+      muteNotifications: true,
+    });
+
+    expect(compareInWorker).toHaveBeenCalledTimes(1);
+    expect(compareInWorker.calls.first().args[0].type).toBe("words");
+    expect(words).not.toHaveBeenCalled();
+    expect(wordHighlights(editor1).length).toBeGreaterThan(0);
+    expect(wordHighlights(editor2).length).toBeGreaterThan(0);
+  });
 });

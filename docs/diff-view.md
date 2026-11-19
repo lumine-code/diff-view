@@ -126,7 +126,7 @@ Automatic recomputation pauses and clears chunks and synchronized scrolling whil
 
 `onDidUpdate` fires on recomputation, which includes the comparison being torn down — so a callback should handle `getDiffView()` answering `null`.
 
-**An update can also carry no chunks for a comparison that is still running.** The diff is computed in the window under the Compute Timeout budget, and a pair that differs almost everywhere can exhaust it; the update then reports empty chunks so consumers clear what they drew, and `getMarkerLayers()` resolves with the emptied layers rather than never settling.
+**An update can also carry no chunks for a comparison that is still running.** Small, difficult line comparisons run in a worker under the Compute Timeout budget. When the comparison exhausts that budget, the update reports empty chunks so consumers clear what they drew, and `getMarkerLayers()` resolves with the empty layers.
 
 ## Teardown
 

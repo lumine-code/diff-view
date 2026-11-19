@@ -811,7 +811,7 @@ describe("diff-view", () => {
       expect(zonesBefore.every((zone) => zone.marker.isDestroyed())).toBe(true);
       expect(extender.getViewZones()).toEqual([]);
 
-      mainModule.updateDiff({ editor1, editor2 });
+      await mainModule.updateDiff({ editor1, editor2 });
       mainModule.diffView._syncViewZoneHeights();
       expect(extender.getViewZones().length).toBeGreaterThan(0);
       expect(extender.getViewZones().every((zone) => !zonesBefore.includes(zone))).toBe(true);
