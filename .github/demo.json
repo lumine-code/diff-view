@@ -2,7 +2,7 @@
   "title": "diff-view",
   "description": "Compare the current file with its committed version side by side.",
   "recordedOn": "2026-11-26",
-  "sourceRevision": "c5d74f16a41d1d92d222959714966dc3313ddf77",
+  "sourceRevision": "c041fb6b61c1b60b490c78e9f9fbf2bbbf72fe89",
   "themeSourceRevision": "0f2c0e4518aa26315df6f13a10792493531b180b",
   "mode": "normal",
   "fontSettings": "default",
@@ -24,19 +24,19 @@
   "privacy": { "version": 1, "location": "workspace-scratch", "textChecked": true },
   "sources": {
     "editor": {
-      "revision": "3fd6839aae4057f9536f8d78bcdd6e14541e7cb1",
-      "dirty": false,
-      "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      "revision": "f9eaab26dcb826699bae92050fa919330d1930aa",
+      "dirty": true,
+      "workingTreeHash": "aa0ef368575b505f538d18a75760bd6d02511034e95643ae0fe4629383a05cc1"
     },
     "package": {
-      "revision": "c5d74f16a41d1d92d222959714966dc3313ddf77",
-      "dirty": false,
-      "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      "revision": "c041fb6b61c1b60b490c78e9f9fbf2bbbf72fe89",
+      "dirty": true,
+      "workingTreeHash": "07ff660262b666fedcea042119a1f4e8eda627c8a918548e48d1ce8933c2dbef"
     },
     "diff-view": {
-      "revision": "c5d74f16a41d1d92d222959714966dc3313ddf77",
-      "dirty": false,
-      "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      "revision": "c041fb6b61c1b60b490c78e9f9fbf2bbbf72fe89",
+      "dirty": true,
+      "workingTreeHash": "07ff660262b666fedcea042119a1f4e8eda627c8a918548e48d1ce8933c2dbef"
     },
     "language-javascript": {
       "revision": "ead87cd1d12c56bdf4337095bda8361abb432538",
@@ -45,18 +45,18 @@
     },
     "one-theme": {
       "revision": "0f2c0e4518aa26315df6f13a10792493531b180b",
-      "dirty": false,
-      "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      "dirty": true,
+      "workingTreeHash": "b6ee5bef3d3236a2db8c1f2429210f44e2fdc70d7ebe0b3aeade945bde8d3ff5"
     },
     "status-bar": {
-      "revision": "7612190ea7d75cad65ffa3a3b140cc8db1db0da3",
-      "dirty": false,
-      "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      "revision": "c0531d63ff7148503b68f189f4fc6d07b038404b",
+      "dirty": true,
+      "workingTreeHash": "0858a9b6cbd1d0074f0285ee97f57f059c46210f15037f2e80140dc5d1a96e5a"
     },
     "tree-view": {
       "revision": "edaf681fd85ce895cb37aed929cc4159e70c2328",
-      "dirty": false,
-      "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      "dirty": true,
+      "workingTreeHash": "0908428506d7d8abadc1b5c0ac34d6150032a6486a52b675e83e0664a8b8a52d"
     }
   },
   "fixtures": [
@@ -71,7 +71,7 @@
       "label": "Compare the current file with its committed version side by side.",
       "width": 1200,
       "height": 600,
-      "sha256": "cee283748a0b7ab0b0d50c3590a25b0d8ccf3acfec322adae16d293e334b5f83"
+      "sha256": "ba3dadc268cd62f2efcd9734b6b81c1ae94d96642236b1d6b766ce324a21e86c"
     }
   ]
 }
